@@ -33,7 +33,9 @@
 }
 
 .footer-link:hover {
-  opacity: 0.8;
+  opacity: 1;
+  text-decoration: underline;
+  color: #CBF84C;
 }
 
 .footer-social {
@@ -78,7 +80,7 @@
   color: rgba(255, 255, 255, 0.8);
   font-family: 'Montserrat', sans-serif;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 300;
 }
 
 .footer-legal {
@@ -91,12 +93,14 @@
   text-decoration: none;
   font-family: 'Montserrat', sans-serif;
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 300;
   transition: opacity 0.2s;
 }
 
 .footer-legal-link:hover {
-  opacity: 0.8;
+  opacity: 1;
+  text-decoration: underline;
+  color: #CBF84C;
 }
 
 
