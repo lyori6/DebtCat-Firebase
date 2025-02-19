@@ -1,0 +1,8 @@
+firebase-debug.log
+
+# Documentation
+*.md
+docs/
+
+# System files
+.DS_Store

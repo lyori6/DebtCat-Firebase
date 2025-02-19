@@ -1,0 +1,48 @@
+<!-- Navigation -->
+<nav class="navbar">
+  <div class="navbar-wrapper">
+    <a href="/index.html" class="navbar-brand">
+      <img src="/images/debtcat-logo-black.svg" loading="lazy" width="70" height="Auto" alt="DebtCat logo">
+    </a>
+    <button class="menu-button" aria-label="Toggle navigation menu" style="padding: 12px;">
+      <svg width="20" height="14" viewBox="0 0 20 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0 0H20V2H0V0Z" fill="white"/>
+        <path d="M0 6H20V8H0V6Z" fill="white"/>
+        <path d="M0 12H20V14H0V12Z" fill="white"/>
+      </svg>
+    </button>
+    <ul class="nav-menu">
+      <li><a href="/start-dispute.html" class="nav-link">Dispute</a></li>
+      <li><a href="/chat.html" class="nav-link">Chat</a></li>
+      <li><a href="/articles.html" class="nav-link">Guides</a></li>
+      <li><a href="/s/about.html" class="nav-link">About Us</a></li>
+    </ul>
+  </div>
+</nav>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const menuButton = document.querySelector('.menu-button');
+    const navMenu = document.querySelector('.nav-menu');
+    
+    if (menuButton && navMenu) {
+        menuButton.addEventListener('click', function() {
+            menuButton.classList.toggle('active');
+            navMenu.classList.toggle('active');
+        });
+
+        // Close menu when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!menuButton.contains(event.target) && !navMenu.contains(event.target)) {
+                menuButton.classList.remove('active');
+                navMenu.classList.remove('active');
+            }
+        });
+    }
+});
+</script>
+
+<!-- White Version Usage:
+Add class "navbar-white" to the nav element:
+<nav class="navbar navbar-white">
+-->

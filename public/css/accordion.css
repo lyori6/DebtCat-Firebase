@@ -1,0 +1,33 @@
+.accordion-icon {
+  width: 24px;
+  height: 24px;
+  transition: transform 0.3s ease;
+  transform: rotate(-90deg); /* Point right when closed */
+  background: url('/images/arrow-left-round.svg') no-repeat center;
+  background-size: contain;
+}
+
+.accordion-item-trigger[aria-expanded="true"] .accordion-icon {
+  transform: rotate(90deg); /* Point down when open */
+}
+
+.accordion-item-trigger {
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 16px;
+  background: none;
+  border: none;
+  text-align: left;
+}
+
+.accordion-item-content {
+  display: none;
+  padding: 0 16px 16px;
+}
+
+.accordion-item-trigger[aria-expanded="true"] + .accordion-item-content {
+  display: block;
+}

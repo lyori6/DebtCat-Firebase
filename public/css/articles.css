@@ -1,0 +1,372 @@
+/* Navbar styles */
+.navbar {
+  position: fixed;
+  width: 100%;
+  z-index: 1000;
+  padding: 1rem 0;
+  background-color: transparent;
+  transition: background-color 0.3s ease;
+}
+
+/* Article detail styles */
+.article-top {
+  max-width: 800px;
+  margin: 100px auto 40px;
+  padding: 0 20px;
+  text-align: center;
+}
+
+.h1-roboto {
+  font-family: 'Roboto', sans-serif;
+  font-size: 42px;
+  line-height: 1.2;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.category-pill {
+  display: inline-block;
+  padding: 6px 16px;
+  background: #f0f0f0;
+  border-radius: 20px;
+  margin-bottom: 16px;
+}
+
+.category-pill .text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+}
+
+.article-meta {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.text-technical {
+  font-size: 14px;
+  color: #666;
+}
+
+.meta-separator {
+  color: #999;
+}
+
+.article-content-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.article-image {
+  width: 100%;
+  max-height: 450px;
+  border-radius: 12px;
+  margin-bottom: 40px;
+  object-fit: cover;
+  display: block;
+}
+
+.article-image.error {
+  object-fit: contain;
+  padding: 30px;
+  background: #f8f8f8;
+  max-height: calc(450px - 60px);
+  margin: 0 auto 40px;
+  width: calc(100% - 60px);
+}
+
+.article-image:not(.error) {
+  max-width: 100%;
+  height: auto;
+  min-height: 300px;
+}
+
+.article-body {
+  font-family: 'Merriweather', serif;
+  font-size: 18px;
+  line-height: 1.8;
+  color: #333;
+}
+
+.article-body h2 {
+  font-family: 'Roboto', sans-serif;
+  font-size: 28px;
+  margin: 40px 0 20px;
+  color: #222;
+}
+
+.article-body h3 {
+  font-family: 'Roboto', sans-serif;
+  font-size: 24px;
+  margin: 30px 0 15px;
+  color: #333;
+}
+
+.article-body p {
+  margin-bottom: 24px;
+}
+
+.article-body ul,
+.article-body ol {
+  margin: 24px 0;
+  padding-left: 24px;
+}
+
+.article-body li {
+  margin-bottom: 12px;
+}
+
+.article-body a {
+  color: #007bff;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.2s;
+}
+
+.article-body a:hover {
+  border-bottom-color: #007bff;
+}
+
+@media (max-width: 767px) {
+  .article-top {
+    margin: 80px auto 30px;
+  }
+
+  .h1-roboto {
+    font-size: 32px;
+  }
+
+  .article-body {
+    font-size: 16px;
+  }
+
+  .article-body h2 {
+    font-size: 24px;
+  }
+
+  .article-body h3 {
+    font-size: 20px;
+  }
+}
+
+/* Article list styles */
+.content-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 10px 20px 40px;
+}
+
+/* Collection list styles */
+.collection-list {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 0 -20px;
+}
+
+.collection-item {
+  width: 33.333%;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Article card styles */
+.article-card {
+  height: 100%;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.article-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.article-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+/* Image container styles */
+.image-container {
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 aspect ratio */
+  position: relative;
+  overflow: hidden;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image-container img {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+  background-size: cover;
+  background-position: center;
+}
+
+.image-container img.error {
+  object-fit: contain;
+  padding: 30px;
+  background: #f8f8f8;
+  width: calc(100% - 60px); /* Account for padding */
+  height: calc(100% - 60px); /* Account for padding */
+}
+
+/* Text container styles */
+.text-container {
+  padding: 24px;
+}
+
+.category-pill {
+  display: inline-block;
+  padding: 6px 16px;
+  background: #f0f0f0;
+  border-radius: 20px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  color: #333;
+}
+
+.card-description {
+  font-size: 15px;
+  line-height: 1.6;
+  color: #666;
+  margin-bottom: 20px;
+}
+
+.publish-date {
+  font-size: 13px;
+  color: #888;
+  margin-bottom: 16px;
+}
+
+.card-more {
+  font-size: 14px;
+  font-weight: 600;
+  color: #007bff;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Container body */
+.container-body {
+  min-height: 100vh;
+  position: relative;
+}
+
+/* Article Page H1 Override */
+.content-container > .h1-montserrat {
+  margin-top: 0; /* Remove extra spacing */
+  margin-bottom: 40px;
+  color: #f0f0f0; /* Override color */
+}
+
+/* Responsive styles */
+@media (max-width: 991px) {
+  .collection-item {
+    width: 50%;
+  }
+  .content-container {
+    padding: 30px 15px;
+  }
+}
+
+@media (max-width: 767px) {
+  .collection-item {
+    width: 100%;
+  }
+  .content-container {
+    padding: 20px 15px;
+  }
+  .text-container {
+    padding: 20px;
+  }
+  .menu-button {
+    display: block;
+  }
+  .nav-menu {
+    display: none;
+  }
+  .nav-menu.active {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #333;
+    padding: 20px;
+  }
+}
+
+.nav-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Page header styles */
+.page-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+/* Menu button styles */
+.menu-button {
+  display: none;
+  background: none;
+  border: none;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.menu-button .icon {
+  width: 24px;
+  height: 2px;
+  background: white;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.menu-button .icon:before,
+.menu-button .icon:after {
+  content: '';
+  position: absolute;
+  width: 24px;
+  height: 2px;
+  background: white;
+  left: 0;
+  transition: transform 0.2s;
+}
+
+.menu-button .icon:before {
+  top: -6px;
+}
+
+.menu-button .icon:after {
+  bottom: -6px;
+}

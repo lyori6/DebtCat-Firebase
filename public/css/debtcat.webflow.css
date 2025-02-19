@@ -361,7 +361,7 @@ ol {
 
 .h1-roboto {
   font-family: var(--roboto);
-  color: var(--primary-black);
+  color: #fff;
   letter-spacing: normal;
   margin-top: 0;
   margin-bottom: 20px;
@@ -643,7 +643,7 @@ ol {
 }
 
 .h1-montserrat {
-  color: var(--primary-black);
+  color: #fff;
   margin-top: 0;
   margin-bottom: 20px;
   font-family: Montserrat, sans-serif;
@@ -657,6 +657,11 @@ ol {
   text-transform: capitalize;
 }
 
+
+body.articles-page h1.h1-montserrat.text-center {
+  color: var(--primary-white) !important;
+  text-transform: capitalize;
+}
 .h2-montserrat {
   color: var(--primary-black);
   margin-top: 0;
@@ -836,6 +841,13 @@ ol {
 .navbar {
   width: 100%;
   margin-bottom: 20px;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.navbar.navbar-white {
+  background-color: var(--primary-white);
 }
 
 .navbar-no-shadow-container {
@@ -912,13 +924,13 @@ ol {
   line-height: 130%;
 }
 
-.nav-link.h4-montserrat-navbar:hover {
-  color: var(--secondary-yellow);
-  text-decoration: underline;
-}
+  .nav-link.h4-montserrat-navbar:hover {
+    color: #CBF84C;
+    text-decoration: underline;
+  }
 
 .nav-link.h4-montserrat-navbar.nav-link-inverse {
-  color: var(--primary-black);
+  color: var(--primary-white);
 }
 
 .nav-dropdown {
@@ -1489,13 +1501,6 @@ ol {
   overflow: visible;
 }
 
-.footer-icon {
-  color: var(--primary-white);
-  font-family: "Fa Brands 400", sans-serif;
-  font-size: 24px;
-  line-height: 24px;
-  text-decoration: none;
-}
 
 .card-container {
   background-color: var(--primary-white);
@@ -2042,7 +2047,7 @@ ol {
   }
 
   .nav-menu {
-    background-color: #fff;
+    background-color: var(--primary-white);
     flex-wrap: wrap;
     justify-content: space-around;
     align-items: center;
@@ -2050,6 +2055,7 @@ ol {
     padding-bottom: 20px;
     padding-left: 0;
     display: flex;
+    border-radius: 8px;
   }
 
   .nav-link {
@@ -2057,8 +2063,13 @@ ol {
     padding-right: 5px;
   }
 
-  .nav-link.h4-montserrat-navbar, .nav-link.h4-montserrat-navbar:hover {
+  .nav-link.h4-montserrat-navbar {
+    color: var(--primary-black);
+  }
+
+  .nav-link.h4-montserrat-navbar:hover {
     color: var(--primary-blue);
+    text-decoration: underline;
   }
 
   .nav-dropdown-list.shadow-three.w--open {
@@ -2072,11 +2083,17 @@ ol {
 
   .menu-button {
     padding: 12px;
+    border-radius: 4px;
+    transition: background-color 0.3s;
+  }
+
+  .menu-button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
   }
 
   .menu-button.w--open {
-    color: #fff;
-    background-color: #0000;
+    color: var(--primary-black);
+    background-color: transparent;
   }
 
   .container-body {
@@ -2084,10 +2101,11 @@ ol {
     background-size: 180%;
   }
 
-  .icon {
-    color: var(--primary-white);
-    -webkit-text-stroke-color: var(--primary-white);
-  }
+.icon,
+.w-icon-nav-menu {
+  color: var(--primary-white) !important;
+  -webkit-text-stroke-color: var(--primary-white) !important;
+}
 
   .icon.navbar-icon-inverse {
     color: var(--primary-black);
@@ -2786,34 +2804,4 @@ ol {
   .testimonial-slider-right {
     right: -10px;
   }
-}
-
-
-@font-face {
-  font-family: 'Fa V 4 Compatibility';
-  src: url('../fonts/fa-v4compatibility.woff2') format('woff2'), url('../fonts/fa-v4compatibility.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Fa Brands 400';
-  src: url('../fonts/fa-brands-400.woff2') format('woff2'), url('../fonts/fa-brands-400.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Fa 400';
-  src: url('../fonts/fa-regular-400.woff2') format('woff2'), url('../fonts/fa-regular-400.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Fa Solid 900';
-  src: url('../fonts/fa-solid-900.woff2') format('woff2'), url('../fonts/fa-solid-900.ttf') format('truetype');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
 }
