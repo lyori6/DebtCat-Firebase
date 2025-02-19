@@ -678,7 +678,7 @@ function generatePdf() {
         // **9. Finalize PDF**
         loadingModal.style.display = 'none';  
         doc.save('dispute_letter.pdf');
-        window.location.href = '/ty-pdf';
+        window.location.href = '/ty-pdf.html';
     }, 3000); 
 }
 // PDF Generation Function for Email (Returns Blob)
@@ -840,7 +840,7 @@ async function sendEmail() {
         if (!data.success) {
             throw new Error(data.message || 'Email sending failed.');
         }
-        window.location.href = "/ty-email-myself";
+        window.location.href = "/ty-email-myself.html";
     } catch (error) {
         console.error('Error sending email:', error);
         alert(error.message || 'An error occurred while sending the email.');
@@ -917,11 +917,11 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     document.getElementById('firstClassMailButton').addEventListener('click', function() {
         updateSubmittedData('first_class');
-        window.location.href = '/collector-info';
+        window.location.href = '/collector-info.html';
     });
     document.getElementById('certifiedMailButton').addEventListener('click', function() {
         updateSubmittedData('certified');
-        window.location.href = '/collector-info';
+        window.location.href = '/collector-info.html';
     });
     document.getElementById('emailAddress').addEventListener('input', validateForm);
     document.getElementById('saveEmail').addEventListener('change', validateForm);

@@ -363,7 +363,7 @@
                 localStorage.setItem('errorData', JSON.stringify(errorData));
                 // Hide the spinner
                 document.getElementById('loadingOverlay').style.display = 'none';
-                window.location.href = "/s/letter-failed";
+                window.location.href = "/s/letter-failed.html";
                 return;
             }
             // Send confirmation email with PDF attachment
@@ -378,13 +378,13 @@
             localStorage.setItem('errorData', JSON.stringify(errorData));
             // Hide the spinner
             document.getElementById('loadingOverlay').style.display = 'none';
-            window.location.href = "/s/letter-failed";
+            window.location.href = "/s/letter-failed.html";
             return;
         }
         // Hide the spinner after successful processing
         document.getElementById('loadingOverlay').style.display = 'none';
         // Redirect to thank you page after processing
-        window.location.href = "/ty-mail";
+        window.location.href = "/ty-mail.html";
     }
     // Function to send confirmation email with PDF attachment
     async function sendConfirmationEmail(data, mailingClassDisplay, pdfBase64, sessionId) {
