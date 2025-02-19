@@ -928,6 +928,18 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('submitEmailButton').addEventListener('click', sendEmail);
 });
 </script>
+<script>
+  // Add scroll event listener for header background color
+  window.addEventListener('scroll', function() {
+  navbar = document.querySelector('.navbar');
+  if (window.scrollY > 0) {
+  navbar.style.backgroundColor = '#3358EF';
+  navbar.style.transition = 'background-color 0.3s ease';
+  } else {
+  navbar.style.backgroundColor = 'transparent';
+  }
+  });
+  </script>
         </body>
         </html>
       </div>

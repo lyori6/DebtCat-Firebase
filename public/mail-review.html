@@ -651,11 +651,11 @@
                 }
             });
             document.getElementById('backButton').addEventListener('click', function() {
-                window.location.href = '/collector-info'; 
+                window.location.href = '/collector-info.html'; 
             });
             // Handle 'Start Over' button click
             document.getElementById('startOverButton').addEventListener('click', function() {
-                window.location.href = '/dispute';
+                window.location.href = '/dispute-form.html';
             });
             // Handle 'Confirm and Pay' button click
             document.getElementById('confirmSubmit').addEventListener('click', async function() {
@@ -720,6 +720,18 @@
             initializePage();
         });
     </script>
+     <script>
+      // Add scroll event listener for header background color
+      window.addEventListener('scroll', function() {
+      navbar = document.querySelector('.navbar');
+      if (window.scrollY > 0) {
+      navbar.style.backgroundColor = '#3358EF';
+      navbar.style.transition = 'background-color 0.3s ease';
+      } else {
+      navbar.style.backgroundColor = 'transparent';
+      }
+      });
+      </script>
         </body>
         </html>
       </div>
