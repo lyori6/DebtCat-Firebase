@@ -1,12 +1,8 @@
-const path = require('path');
-const fs = require('fs');
-
-// Asset path configuration
 const config = {
   // Base paths
   paths: {
     images: '/images',
-    articles: '/articles',
+    articles: '/articles-static',
     css: '/css',
     data: '/data'
   },
@@ -14,42 +10,52 @@ const config = {
   // Article mappings
   articles: {
     'CFPB Rule Means No More Medical Debt on Credit Scores': {
-      filename: 'cfpb-rule-means-no-more-medical-debt-on-credit-scores.html',
+      filename: 'cfpb-medical.html',
+      url: '/articles-static/cfpb-medical.html',
       image: 'medical-debt.jpg'
     },
     'California Removes Medical Debt from Credit Reports in 2025': {
-      filename: 'california-removes-medical-debt-from-credit-reports-in-2025.html',
+      filename: 'ca25.html',
+      url: '/articles-static/ca25.html', 
       image: 'california-medical-debt.jpg'
     },
     'Debt Collector vs. Credit Bureau Disputes: Understanding the Difference': {
-      filename: 'debt-collector-vs-credit-bureau-disputes-understanding-the-difference.html',
+      filename: 'collector-vs-bureau.html',
+      url: '/articles-static/collector-vs-bureau.html',
       image: 'debt-collector.jpg'
     },
     'Debt Collectors Beware: How the FDCPA and CFPB Protect Your Wallet': {
-      filename: 'debt-collectors-beware-how-the-fdcpa-and-cfpb-protect-your-wallet.html',
+      filename: 'collectors-beware.html',
+      url: '/articles-static/collectors-beware.html',
       image: 'debt-collectors-beware.jpg'
     },
     'Debt Consolidation Secrets They Don\'t Want You to Know': {
-      filename: 'debt-consolidation-secrets-they-don-t-want-you-to-know.html',
+      filename: 'debt-consolidation.html', 
+      url: '/articles-static/debt-consolidation.html',
       image: 'debt-consolidation.jpg'
     },
     'Debt Negotiation: An Insider\'s Guide to Dealing with Collectors': {
-      filename: 'debt-negotiation-an-insider-s-guide-to-dealing-with-collectors.html',
+      filename: 'insider-guide.html',
+      url: '/articles-static/insider-guide.html',
       image: 'debt-negotiation.jpg'
     },
     'Old Debt Calls? How the Statute of Limitations Protects You': {
-      filename: 'old-debt-calls-how-the-statute-of-limitations-protects-you.html',
+      filename: 'old-debt.html',
+      url: '/articles-static/old-debt.html',
       image: 'old-debt.jpg'
     },
     'What Really Happens When You Ignore Debt?': {
-      filename: 'what-really-happens-when-you-ignore-debt.html',
+      filename: 'ignore-debt.html',
+      url: '/articles-static/ignore-debt.html',
       image: 'ignore-debt.jpg'
     },
     'What to Do When a Debt Collector Contacts You': {
-      filename: 'what-to-do-when-a-debt-collector-contacts-you.html',
+      filename: 'collector-contact.html',
+      url: '/articles-static/collector-contact.html',
       image: 'debt-collector-contact.jpg'
     }
   },
+ 
 
   // Default values
   defaults: {
