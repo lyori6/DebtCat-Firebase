@@ -1,0 +1,23 @@
+{
+  "name": "debtcat-firebase",
+  "version": "1.0.0",
+  "description": "## TL;DR Successfully migrated a debt management web application from Webflow to Firebase under tight budget constraints. Replaced dynamic CMS with static article templates, implemented custom migration scripts, and leveraged AI assistance for development. The migration maintained core functionality while eliminating recurring costs and simplifying the codebase.",
+  "main": "convert-articles-config.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lyori6/DebtCat-Firebase.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lyori6/DebtCat-Firebase/issues"
+  },
+  "homepage": "https://github.com/lyori6/DebtCat-Firebase#readme"
+}
