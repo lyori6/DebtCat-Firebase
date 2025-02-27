@@ -123,6 +123,7 @@ body, html {
     background-color: #ffffff;
     padding: 10px;
     border-radius: 16px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 600px;
     margin: 0 auto;
@@ -140,6 +141,9 @@ body, html {
     position: sticky;
     top: 0;
     z-index: 13;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 #chat-header h2 {
     font-family: 'Montserrat', sans-serif;
@@ -147,6 +151,11 @@ body, html {
     font-weight: 600;
     color: #333;
     margin: 0;
+}
+#chat-header img {
+    width: 30px;
+    height: auto;
+    margin-right: 10px;
 }
 /* Hide the top disclaimer in the UI */
 #disclaimer {
@@ -473,12 +482,59 @@ body, html {
         right: 10px;
     }
 }
+    /* Chat Page Responsive Design */
+@media (min-width: 992px) {
+    #app-container {
+        max-width: 800px;
+        height: calc(100vh - 100px);
+        border: 1px solid #E0E0E0;
+    }
+    
+    #chat-container {
+        max-width: 800px;
+    }
+    
+    .message {
+        max-width: 70%;
+    }
+}
+
+@media (max-width: 991px) {
+    #app-container {
+        max-width: 600px;
+    }
+    
+    #chat-container {
+        max-width: 600px;
+    }
+}
+
+/* Preserve mobile view */
+@media (max-width: 767px) {
+    #app-container {
+        height: 100vh;
+        max-width: 100%;
+        border-radius: 0;
+        box-shadow: none;
+        padding: 5px;
+        border: none;
+    }
+    
+    #chat-container {
+        padding: 10px;
+    }
+    
+    .message {
+        max-width: 85%;
+    }
+}
     </style>
         </head>
         <body>
           <div id="app-container">
             <!--  Header  -->
             <header id="chat-header">
+              <img src="images/debtcat-logo-inverse.svg" alt="DebtCat logo">
               <h2>DebtChat</h2>
             </header>
             <main id="chat-container">
