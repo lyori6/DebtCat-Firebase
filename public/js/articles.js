@@ -151,7 +151,7 @@ function createArticleCard(article) {
 
   return `
     <div class="collection-item">
-    <div class="article-card">
+    <div class="article-card" style="box-shadow: 4px 4px 0 0 #000000 !important; border: 3px solid #000000 !important; border-radius: 12px !important;">
       <a href="${activeConfig.paths.articles}/${encodeURIComponent(articleFilename)}" class="article-card-link">
           <div class="image-container">
             <img src="${imageUrl}" 

@@ -1,0 +1,23 @@
+/* 
+ * Article Card Fix - Special styling to ensure correct box shadow
+ * This file should be loaded AFTER all other CSS files
+ */
+
+/* Direct targeting of article cards with maximum specificity */
+html body .container-body .content-container .collection-list .collection-item .article-card {
+  position: relative !important;
+  box-shadow: 4px 4px 0 0 #000000 !important;
+  border: 3px solid #000000 !important;
+  border-radius: 12px !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  overflow: hidden !important;
+}
+
+html body .container-body .content-container .collection-list .collection-item .article-card:hover {
+  box-shadow: 4px 4px 0 0 #000000 !important;
+  transform: translateY(-2px) !important;
+}
+
+html body .container-body .content-container .collection-list .collection-item .article-card:active {
+  box-shadow: none !important;
+}

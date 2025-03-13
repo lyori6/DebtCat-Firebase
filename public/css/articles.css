@@ -173,22 +173,26 @@
   box-sizing: border-box;
 }
 
-/* Article card styles */
-.article-card {
-  height: 100%;
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+/* Specific box shadow for article cards */
+.collection-list .collection-item .article-card {
+  position: relative !important;
+  box-shadow: 4px 4px 0 0 #000000 !important;
+  border: 3px solid #000000 !important;
+  border-radius: 12px !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease !important;
+  overflow: hidden !important;
 }
 
-.article-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+.collection-list .collection-item .article-card:hover {
+  box-shadow: 4px 4px 0 0 #000000 !important;
+  transform: translateY(-2px) !important;
 }
 
-.article-card-link {
+.collection-list .collection-item .article-card:active {
+  box-shadow: none !important;
+}
+
+.collection-list .article-card-link {
   text-decoration: none;
   color: inherit;
   display: block;
