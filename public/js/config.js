@@ -1,4 +1,3 @@
-
 // Asset path configuration
 const config = {
   // Base paths
@@ -20,7 +19,7 @@ const config = {
       image: 'california-medical-debt.jpg'
     },
     'Debt Collector vs. Credit Bureau': {
-      filename: 'collector-vs-bureau.html',
+      filename: 'Collector-vs-Bureau.html',
       image: 'debt-collector.jpg'
     },
     'Debt Collectors Beware': {
