@@ -123,8 +123,26 @@
   }
 
   .footer-social {
-    justify-content: flex-start;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 24px;
     width: 100%;
+  }
+
+  .footer .w-container {
+    max-width: none !important;
+    width: 100% !important;
+  }
+
+  @media (max-width: 768px) {
+    .footer-social {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 24px;
+      width: 100%;
+    }
   }
 
   .footer-bottom {
