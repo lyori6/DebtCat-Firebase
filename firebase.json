@@ -4,7 +4,8 @@
     "ignore": [
       "firebase.json",
       "**/.*",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "articles/DebtCat - Articles.csv"
     ],
     "rewrites": [
       {
@@ -47,6 +48,18 @@
             "value": "no-cache, no-store, must-revalidate"
           }
         ]
+      }
+    ],
+    "redirects": [
+      {
+        "source": "/chat",
+        "destination": "/chat.html",
+        "type": 302
+      },
+      {
+        "source": "/chat/",
+        "destination": "/chat.html",
+        "type": 302
       }
     ]
   }
