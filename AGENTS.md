@@ -9,7 +9,8 @@ DebtCat is a free self-help tool for understanding debt collection notices. It i
 Surface objective information and user-selected options. Never generate recommendations, legal strategy, case-strength assessments, outcome predictions, or custom legal arguments. Disclaimers, free access, and nonprofit status must not be treated as permission to give individualized legal advice.
 
 - Keep users as decision-makers. Populate existing templates only from their explicit selections and supplied facts; do not select a legal response for them.
-- Do not build a chatbot replacement, file documents on a user's behalf, or calculate or state statutes-of-limitations conclusions.
+- DebtChat (`public/chat.html`) was restored on 2026-10-13 at the owner's request. Keep it framed as general information, not legal advice, and keep its disclaimers. Do not file documents on a user's behalf, or calculate or state statutes-of-limitations conclusions.
+- Analytics and ad pixels load only through `public/js/consent.js` after cookie consent. Do not add tracking snippets directly to pages.
 - Do not infer legal violations from missing extracted fields. Extraction uncertainty must remain explicit; jurisdiction-specific decisions require counsel.
 - Do not change dispute-letter legal text without a separately scoped, counsel-reviewed request.
 

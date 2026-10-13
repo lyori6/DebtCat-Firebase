@@ -29,28 +29,7 @@
   </script>
   <link href="images/favicon.png" rel="shortcut icon" type="image/x-icon">
   <link href="images/webclip.png" rel="apple-touch-icon">
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-DMRMQNLTBZ"></script>
-  <script type="text/javascript">
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('set', 'developer_id.dZGVlNj', true);
-    gtag('config', 'G-DMRMQNLTBZ');
-  </script>
-  <!-- MS Clarity -->
-  <script type="text/javascript">
-    (function(c,l,a,r,i,t,y){
-        c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
-        t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
-        y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-    })(window, document, "clarity", "script", "oc17kv2js6");
-  </script>
-  <script>
-    // Define the getIP function before loading the ipify script
-    function getIP(json) { userIP = json.ip; }
-    let userIP = '';
-  </script>
-  <script src="https://api.ipify.org?format=jsonp&callback=getIP"></script>
+  <script src="/js/consent.js"></script>
   <link rel="stylesheet" href="https://unpkg.com/@geoapify/geocoder-autocomplete@^1/styles/minimal.css">
   <link href="/css/footer.css" rel="stylesheet" type="text/css">
   <!-- Cookie Banner Styles -->
@@ -152,6 +131,9 @@
               <a href="start-dispute.html" class="nav-link h4-montserrat-navbar">Dispute</a>
             </li>
             <li class="list-item">
+              <a href="chat.html" class="nav-link h4-montserrat-navbar">Chat</a>
+            </li>
+            <li class="list-item">
               <a href="articles.html" class="nav-link h4-montserrat-navbar">Guides</a>
             </li>
             <li class="list-item">
@@ -169,19 +151,19 @@
     <div class="w-layout-blockcontainer content-container w-container">
       <section class="section-intro">
         <h1 class="h1-roboto text-white">Break Debt, Not Sweat</h1>
-        <h1 class="h1-montserrat text-white">Understand debt collection notices<br>and explore self-help resources</h1>
+        <h1 class="h1-montserrat text-white">Understand debt notices, dispute a debt,<br>and learn your rights</h1>
       </section>
       <section class="section-options">
         <div class="w-layout-blockcontainer landing-page-option w-container">
           <div class="w-layout-blockcontainer option-content w-container">
             <img src="images/icon-where-to-start.svg" loading="lazy" alt="" class="chat-bubble-icon options-icon">
-            <h4>Understanding a notice?<br>About DebtCat</h4>
-            <p class="option-paragraph">Read about DebtCat and its self-help resources for understanding debt collection notices.</p>
+            <h4>Have a question?<br>Ask DebtChat</h4>
+            <p class="option-paragraph">Ask general questions about debt collection notices. DebtChat shares general information, not legal advice.</p>
           </div>
           <div class="w-layout-blockcontainer option-button-container w-container">
             <div class="button-wrapper-inside special">
-              <a href="/s/about.html" class="button-link w-inline-block">
-                <div data-figma-id="2303:666" class="button-text">About DebtCat</div>
+              <a href="chat.html" class="button-link w-inline-block">
+                <div data-figma-id="2303:666" class="button-text">Chat Now</div>
               </a>
             </div>
           </div>
@@ -440,17 +422,6 @@
     </div>
   </div>
   
-  <!-- Cookie Banner -->
-  <div id="cookies-banner">
-    <div class="cookies-content">
-      <span>🍪</span>
-      <p>
-        We use cookies to improve your experience. By using our site, you agree to our
-        <button id="privacy-policy-link">Privacy Policy</button>.
-      </p>
-    </div>
-    <button id="accept-cookies">Got it!</button>
-  </div>
   
   <!-- Footer -->
   <footer class="footer">
@@ -459,7 +430,7 @@
         <div class="footer-links">
           <a href="/start-dispute.html" class="footer-link">Dispute</a>
           <a href="/articles.html" class="footer-link">Guides</a>
-
+          <a href="/chat.html" class="footer-link">Debt Chat</a>
           <a href="/s/about.html" class="footer-link">About Us</a>
           <a href="/s/fdcpa-checklist.html" class="footer-link">FDCPA Checklist</a>
         </div>
@@ -493,6 +464,7 @@
           <a href="/s/tos.html" target="_blank" class="footer-legal-link">Terms Of Service</a>
           <a href="/s/refund.html" target="_blank" class="footer-legal-link">Refund Policy</a>
           <a href="/s/privacy-policy.html" target="_blank" class="footer-legal-link">Privacy Policy</a>
+          <a href="#cookie-settings" class="footer-legal-link">Cookie Settings</a>
         </div>
       </div>
     </div>
@@ -501,18 +473,6 @@
   <!-- Scripts -->
   <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Cookie Banner Script
-  (function() {
-    const banner = document.getElementById('cookies-banner');
-    const acceptButton = document.getElementById('accept-cookies');
-    if (localStorage.getItem('cookiesAccepted')) {
-      banner.style.display = 'none';
-    }
-    acceptButton.addEventListener('click', function() {
-      localStorage.setItem('cookiesAccepted', 'true');
-      banner.style.display = 'none';
-    });
-  })();
 
   // Navbar scroll background color change
   const navbar = document.querySelector('.navbar');
