@@ -9,10 +9,10 @@ DebtCat is a free self-help tool for understanding debt collection notices. The 
 ## Current priorities
 
 1. Reduce misleading public marketing and individualized-advice surfaces.
-2. Retire the legacy AI chat client and its navigation links while preserving access to the existing dispute workflow.
+2. Keep DebtChat (restored 2026-10-13) working as a general-information tool, alongside the existing dispute workflow.
 3. Keep maintenance small, inexpensive, and reviewable.
 
-The retired chat URL retains a static explanation and links to the homepage, general information, and the dispute-letter tool. It does not accept messages or call the legacy AI Worker.
+DebtChat calls the `chatgpt-integration` Cloudflare Worker, which only accepts requests from https://debtcat.com, so it cannot be tested from a local preview.
 
 ## Existing system
 
@@ -22,7 +22,7 @@ The remaining dispute workflow uses browser state and external Cloudflare Worker
 
 ## Future work is separate
 
-Scanner development, classification, deadline calculations, platform migrations, redesigns, monetization, and backend rewrites require separate scopes. No chatbot replacement is planned. Do not infer legal conclusions from document classification or extracted fields.
+Scanner development, classification, deadline calculations, platform migrations, redesigns, monetization, and backend rewrites require separate scopes. Do not infer legal conclusions from document classification or extracted fields.
 
 Before any future legal-information feature ships, obtain appropriate jurisdiction-specific review and verify its public claims against primary sources. Historical research and market estimates are not approved public copy or current legal authority.
 

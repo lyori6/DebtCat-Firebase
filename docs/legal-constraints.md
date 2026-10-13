@@ -34,4 +34,4 @@ Counsel must review:
 - Credit-services laws, payment restrictions, nonprofit exemptions, and referral arrangements before related product changes.
 - Existing public articles for current law, categorical legal claims, and jurisdiction-specific advice.
 
-This cleanup retires the public chat client; it does not disable the separately hosted legacy Worker. Worker retirement requires a separate backend task.
+The public chat client (DebtChat) was retired on 2026-09-17 and restored on 2026-10-13 at the owner's request, with general-information disclaimers. Its answers come from a model behind a Cloudflare Worker and are not reviewed by counsel; the system prompt and any model change should keep responses to general information. Analytics, Clarity, Meta Pixel, and Taboola load only after cookie consent via `public/js/consent.js`.
