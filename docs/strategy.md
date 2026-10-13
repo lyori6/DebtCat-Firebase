@@ -12,7 +12,7 @@ DebtCat is a free self-help tool for understanding debt collection notices. The 
 2. Keep DebtChat (restored 2026-10-13) working as a general-information tool, alongside the existing dispute workflow.
 3. Keep maintenance small, inexpensive, and reviewable.
 
-DebtChat calls the `chatgpt-integration` Cloudflare Worker, which only accepts requests from https://debtcat.com, so it cannot be tested from a local preview.
+DebtChat calls the `chatgpt-integration` Cloudflare Worker (model `gpt-6-luna`). A copy of its source is in `workers/chatgpt-integration/worker.js`; deploy changes by pasting it into the Cloudflare code editor. It accepts requests from debtcat.com and from the local preview on port 5050.
 
 ## Existing system
 
@@ -28,4 +28,4 @@ Before any future legal-information feature ships, obtain appropriate jurisdicti
 
 ## Remaining review needs
 
-Existing educational articles and the dispute template need counsel's review for current law and jurisdiction-specific statements. The legacy AI Worker remains a separately hosted endpoint; retiring the website client does not disable that endpoint. Entity formation, referrals, and payment policy remain separate decisions requiring appropriate review.
+Existing educational articles and the dispute template need counsel's review for current law and jurisdiction-specific statements. The DebtChat system prompt should get counsel's review along with the templates. Entity formation, referrals, and payment policy remain separate decisions requiring appropriate review.
