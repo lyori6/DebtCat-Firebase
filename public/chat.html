@@ -765,7 +765,8 @@ function sanitizeResponse(response) {
             }, 10000);
             if (typeof turnstile !== 'undefined') {
                 turnstile.render('#captchaContainer', {
-                    sitekey: '0x4AAAAAAAiA6_L9K0nk7Zwy',  // Replace with your actual site key
+                    // The live site key only works on debtcat.com; Cloudflare's always-pass test key is used for local previews.
+                    sitekey: ['localhost', '127.0.0.1'].includes(location.hostname) ? '1x00000000000000000000AA' : '0x4AAAAAAAiA6_L9K0nk7Zwy',
                     callback: function(token) {
                         console.log("CAPTCHA completed successfully.");
                         captchaValidated = true;

@@ -16,7 +16,7 @@ const imageMapping = {
   "California Removes Medical Debt from Credit Reports in 2025": "https://cdn.prod.website-files.com/66567a81d5c1745978fb58d6/6773394a803012bd95e5889f_LwuhTX7QSaeIvz1cb2107Q.webp",
   "Debt Collector vs. Credit Bureau Disputes: Understanding the Difference": "https://cdn.prod.website-files.com/66567a81d5c1745978fb58d6/6709b18de51097dd83363b3f_pexels-rdne-9034783.jpg",
   "Debt Collectors Beware: How the FDCPA and CFPB Protect Your Wallet": "https://cdn.prod.website-files.com/66567a81d5c1745978fb58d6/66ea5592e9931bf9ccea03e1_pexels-sora-shimazaki-5668772.jpg",
-  "Debt Consolidation Secrets They Don't Want You to Know": "https://cdn.prod.website-files.com/66567a81d5c1745978fb58d6/6737f6be73b190ea1ef12dfa_pexels-karolina-grabowska-4968630.jpg",
+  "Debt Consolidation: What to Know Before You Sign Up": "https://cdn.prod.website-files.com/66567a81d5c1745978fb58d6/6737f6be73b190ea1ef12dfa_pexels-karolina-grabowska-4968630.jpg",
   "Debt Negotiation: An Insider's Guide to Dealing with Collectors": "https://cdn.prod.website-files.com/66567a81d5c1745978fb58d6/66ea55245ec37da493d264bc_man-talking-on-cellphone.jpg",
   "Old Debt Calls? How the Statute of Limitations Protects You": "https://cdn.prod.website-files.com/66567a81d5c1745978fb58d6/67018b4b5ebcffcb9074f614_hourglass-time-flies.jpg",
   "What Really Happens When You Ignore Debt?": "https://cdn.prod.website-files.com/66567a81d5c1745978fb58d6/66fc92b55e6364b299af8452_pexels-alex-green-5699865.jpg",
