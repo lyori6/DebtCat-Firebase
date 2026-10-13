@@ -743,59 +743,43 @@ function sanitizeResponse(response) {
     }
 }
         // Function to load CAPTCHA
-        function loadCaptcha() {
-            let captchaLoaded = false;
-            // Start a timer to retry loading CAPTCHA after 5 seconds
-            const retryTimeout = setTimeout(() => {
-                if (!captchaLoaded) {
-                    console.log("CAPTCHA not loaded in 5 seconds, retrying...");
-                    // Remove existing CAPTCHA if any
-                    const captchaContainer = document.getElementById('captchaContainer');
-                    captchaContainer.innerHTML = '';
-                    // Attempt to reload the CAPTCHA
-                    loadCaptcha();  // Recursive call to reload
+        // Renders the Turnstile widget once and leaves it in place while the visitor completes it.
+        // (The previous version re-rendered it after 5 seconds, which wiped out interactive challenges.)
+        let captchaWidgetId = null;
+        function loadCaptcha(attempt = 0) {
+            const loadingModal = document.getElementById('loadingModal');
+            if (typeof turnstile === 'undefined') {
+                // The Turnstile script loads asynchronously, so wait up to 10 seconds for it.
+                if (attempt < 20) {
+                    setTimeout(() => loadCaptcha(attempt + 1), 500);
+                    return;
                 }
-            }, 5000);
-            // Start another timer to prompt the user after 10 seconds
-            const refreshTimeout = setTimeout(() => {
-                if (!captchaLoaded) {
-                    console.log("CAPTCHA not loaded in 10 seconds, prompting user to refresh.");
-                    alert("There was an issue loading the CAPTCHA. Please refresh the page and try again.");
-                }
-            }, 10000);
-            if (typeof turnstile !== 'undefined') {
-                turnstile.render('#captchaContainer', {
-                    // The live site key only works on debtcat.com; Cloudflare's always-pass test key is used for local previews.
-                    sitekey: ['localhost', '127.0.0.1'].includes(location.hostname) ? '1x00000000000000000000AA' : '0x4AAAAAAAiA6_L9K0nk7Zwy',
-                    callback: function(token) {
-                        console.log("CAPTCHA completed successfully.");
-                        captchaValidated = true;
-                        captchaLoaded = true;
-                        clearTimeout(retryTimeout);
-                        clearTimeout(refreshTimeout);
-                        closeCaptchaModal();  // Close the CAPTCHA modal
-                        const loadingModal = document.getElementById('loadingModal');
-                        loadingModal.style.display = 'none';  // Hide loading spinner
-                        sendMessage();  // Send the user's message
-                    },
-                    'error-callback': function() {
-                        console.log("CAPTCHA failed.");
-                        captchaValidated = false;
-                        captchaLoaded = true;  // Consider it loaded even if it failed
-                        clearTimeout(retryTimeout);
-                        clearTimeout(refreshTimeout);
-                        const loadingModal = document.getElementById('loadingModal');
-                        loadingModal.style.display = 'none';  // Hide loading spinner
-                    }
-                });
-            } else {
                 console.error('Turnstile is not available.');
-                captchaLoaded = true;  // Since we know it won't load
-                clearTimeout(retryTimeout);
-                clearTimeout(refreshTimeout);
-                const loadingModal = document.getElementById('loadingModal');
-                loadingModal.style.display = 'none';  // Hide loading spinner
+                loadingModal.style.display = 'none';
+                closeCaptchaModal();
+                alert("There was an issue loading the verification check. Please refresh the page and try again.");
+                return;
             }
+            if (captchaWidgetId !== null) {
+                turnstile.reset(captchaWidgetId);
+                loadingModal.style.display = 'none';
+                return;
+            }
+            captchaWidgetId = turnstile.render('#captchaContainer', {
+                // The live site key only works on debtcat.com; Cloudflare's always-pass test key is used for local previews.
+                sitekey: ['localhost', '127.0.0.1'].includes(location.hostname) ? '1x00000000000000000000AA' : '0x4AAAAAAAiA6_L9K0nk7Zwy',
+                callback: function(token) {
+                    console.log("CAPTCHA completed successfully.");
+                    captchaValidated = true;
+                    closeCaptchaModal();  // Close the CAPTCHA modal
+                    sendMessage();  // Send the message the visitor already typed
+                },
+                'error-callback': function() {
+                    console.log("CAPTCHA failed.");
+                    captchaValidated = false;
+                }
+            });
+            loadingModal.style.display = 'none';  // The widget is on screen, so hide the spinner
         }
         // Function to open CAPTCHA modal
         function openCaptchaModal() {

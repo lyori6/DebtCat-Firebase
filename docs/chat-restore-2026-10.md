@@ -34,6 +34,15 @@ Branch: `claude/project-thread-9xnbym`. Merging to `main` deploys the site.
 - **"Debt Consolidation Secrets They Don't Want You to Know"** is retitled "Debt Consolidation: What to Know Before You Sign Up." The URLs are unchanged.
 - **Homepage headline:** "Understand debt notices, dispute a debt, and learn your rights." A CSS fix keeps the hero gradient behind the headline between 992px and 1299px.
 
+### Clean URLs (follow-up fix)
+- `firebase.json` now has `"cleanUrls": true`, so `/start-dispute`, `/dispute-form`, `/s/tos` and the other sitemap URLs load. Before, they returned 404, including the dispute link DebtChat gives out. `.html` URLs redirect to the clean version.
+- Added 301 redirects: `/tos`, `/privacy-policy`, `/refund`, `/about`, `/fdcpa-checklist`, `/dispute`, and six old Webflow article slugs (such as `/articles/what-is-debt-consolidation`) that pages still link to.
+- Removed the `/chat` to `/chat.html` redirect, which would loop with clean URLs.
+- The legacy article files with `?` in their names (for example `Old Debt Calls?.html`) don't work with clean URLs. They aren't linked from the site; the slug versions are.
+
+### Chat human check (follow-up fix)
+- The Turnstile widget used to be wiped and re-rendered after 5 seconds, which reset interactive challenges and made people send their message twice. It now renders once and sends the message automatically after the check passes.
+
 ### Repo guidance
 - `AGENTS.md`, `docs/legal-constraints.md`, and `docs/strategy.md` now allow DebtChat as a general-information tool and require tracking to go through `consent.js`.
 

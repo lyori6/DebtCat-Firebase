@@ -11,6 +11,10 @@ http.createServer((req, res) => {
   if (r) { res.writeHead(r.type || 302, { Location: r.destination }); return res.end(); }
   const rw = (cfg.rewrites || []).find(r => r.source === u);
   if (rw) u = rw.destination;
+  // cleanUrls: /page.html redirects to /page, like Firebase Hosting.
+  if (cfg.cleanUrls && u.endsWith('.html') && find(path.join(pub, path.normalize(u)))) {
+    res.writeHead(301, { Location: u.replace(/(index)?\.html$/, '') }); return res.end();
+  }
   const f = find(path.join(pub, path.normalize(u)));
   if (!f || !f.startsWith(pub)) { res.writeHead(404, {'Content-Type':'text/html'}); return fs.createReadStream(path.join(pub, '404.html')).pipe(res); }
   res.writeHead(200, { 'Content-Type': types[path.extname(f).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-store' });
