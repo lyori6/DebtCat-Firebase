@@ -2805,3 +2805,12 @@ body.articles-page h1.h1-montserrat.text-center {
     right: -10px;
   }
 }
+
+/* Mid-width desktops: with background-size: contain the hero gradient gets too short
+   for a three-line headline, so render it at a fixed minimum width (cropped at the sides). */
+@media screen and (min-width: 992px) and (max-width: 1299px) {
+  .container-body:not(.container-body-inverse) {
+    background-size: 1300px auto;
+    background-position: center top;
+  }
+}
