@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "debtcat-hosting",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [".claude/serve.mjs", ".", "5050"],
+      "port": 5050
+    }
+  ]
+}
