@@ -52,15 +52,66 @@
     ],
     "redirects": [
       {
-        "source": "/chat",
-        "destination": "/chat.html",
-        "type": 302
+        "source": "/tos",
+        "destination": "/s/tos",
+        "type": 301
       },
       {
-        "source": "/chat/",
-        "destination": "/chat.html",
-        "type": 302
+        "source": "/privacy-policy",
+        "destination": "/s/privacy-policy",
+        "type": 301
+      },
+      {
+        "source": "/refund",
+        "destination": "/s/refund",
+        "type": 301
+      },
+      {
+        "source": "/about",
+        "destination": "/s/about",
+        "type": 301
+      },
+      {
+        "source": "/fdcpa-checklist",
+        "destination": "/s/fdcpa-checklist",
+        "type": 301
+      },
+      {
+        "source": "/dispute",
+        "destination": "/start-dispute",
+        "type": 301
+      },
+      {
+        "source": "/articles/what-is-debt-consolidation",
+        "destination": "/articles/debt-consolidation-secrets-they-don-t-want-you-to-know",
+        "type": 301
+      },
+      {
+        "source": "/articles/what-happens-if-you-ignore-debt",
+        "destination": "/articles/what-really-happens-when-you-ignore-debt",
+        "type": 301
+      },
+      {
+        "source": "/articles/how-can-i-negotiate-with-a-debt-collector",
+        "destination": "/articles/debt-negotiation-an-insider-s-guide-to-dealing-with-collectors",
+        "type": 301
+      },
+      {
+        "source": "/articles/dispute-options-collectors-vs-credit-bureaus",
+        "destination": "/articles/debt-collector-vs-credit-bureau-disputes-understanding-the-difference",
+        "type": 301
+      },
+      {
+        "source": "/articles/statute-of-limitations",
+        "destination": "/articles/old-debt-calls-how-the-statute-of-limitations-protects-you",
+        "type": 301
+      },
+      {
+        "source": "/articles/fdcpa-and-cfpb",
+        "destination": "/articles/debt-collectors-beware-how-the-fdcpa-and-cfpb-protect-your-wallet",
+        "type": 301
       }
-    ]
+    ],
+    "cleanUrls": true
   }
 }
