@@ -1,0 +1,58 @@
+{
+  "isCollectionNotice": true,
+  "collectorName": {
+    "value": "Sample Recovery Services LLC"
+  },
+  "collectorAddress": {
+    "value": "100 Example Plaza, Suite 400"
+  },
+  "collectorCity": {
+    "value": "Springfield"
+  },
+  "collectorState": {
+    "value": "IL"
+  },
+  "collectorZip": {
+    "value": "62701"
+  },
+  "currentCreditor": {
+    "value": "Fakebank Card Services"
+  },
+  "originalCreditor": {
+    "value": null
+  },
+  "accountNumber": {
+    "value": "4417-2290-0013"
+  },
+  "itemizationDate": {
+    "value": "2026-03-15"
+  },
+  "amountOnItemizationDate": {
+    "value": "2234.56"
+  },
+  "currentAmount": {
+    "value": "2284.56"
+  },
+  "noticeDate": {
+    "value": "2026-10-01"
+  },
+  "respondByDate": {
+    "value": "2026-11-10"
+  },
+  "consumerName": {
+    "value": "Jordan Testcase"
+  },
+  "consumerAddress": {
+    "value": "42 Placeholder Lane"
+  },
+  "consumerCity": {
+    "value": "Riverton"
+  },
+  "consumerState": {
+    "value": "WY"
+  },
+  "consumerZip": {
+    "value": "82501"
+  },
+  "mentionsCourt": false
+}

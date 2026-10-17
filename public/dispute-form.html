@@ -800,6 +800,35 @@ function addressAutocomplete(containerElement) {
     }
   }
 }
+// Fill the form from a notice scan (notice.html), if there is one, then clear it.
+document.addEventListener("DOMContentLoaded", function() {
+  let scan = null;
+  try {
+    scan = JSON.parse(sessionStorage.getItem('noticeScan'));
+    sessionStorage.removeItem('noticeScan');
+  } catch (error) { /* no scan, or storage is blocked */ }
+  if (!scan) return;
+  const name = (scan.consumerName || '').trim();
+  const split = name.lastIndexOf(' ');
+  const values = {
+    formFirstName: split > 0 ? name.slice(0, split) : name,
+    formLastName: split > 0 ? name.slice(split + 1) : '',
+    formAddress: scan.consumerAddress,
+    formCity: scan.consumerCity,
+    formState: (scan.consumerState || '').toUpperCase(),
+    formZip: scan.consumerZip,
+    formCollectorName: scan.collectorName,
+    formAccountNumber: scan.accountNumber,
+    formBalance: (scan.currentAmount || '').replace(/[$,\s]/g, '')
+  };
+  for (const id in values) {
+    const input = document.getElementById(id);
+    if (input && values[id]) {
+      input.value = values[id];
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  }
+});
 document.addEventListener("DOMContentLoaded", async function() {
   const autocompleteContainer = document.getElementById("autocomplete-container");
   if (autocompleteContainer) {
