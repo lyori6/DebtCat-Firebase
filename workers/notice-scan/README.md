@@ -23,7 +23,7 @@ CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... OPENAI_API_KEY=... TURNSTILE_
   node workers/notice-scan/setup-preview.mjs debtcat-e5451--pr3-abc123.web.app
 ```
 
-The token needs Workers Scripts Edit and Turnstile Edit. Add `--dry-run` to check the token and the widget first. The script deploys, sets both secrets, adds the hostname to the widget (keeping the existing ones) and checks the Worker answers.
+The token needs Workers Scripts Edit and Turnstile Edit. Add `--dry-run` to check the token and the widget first. Add `--turnstile-only` with `localhost` as the hostname to allow the local preview. The script deploys, sets both secrets, adds the hostname to the widget (keeping the existing ones) and checks the Worker answers.
 
 The live Worker (`npx wrangler deploy`, no `--env`) waits for the lawyer review.
 
