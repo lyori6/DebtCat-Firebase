@@ -16,6 +16,15 @@ This creates `notice-scan-preview.debtcatai.workers.dev`. It accepts requests fr
 
 Turnstile only runs on hostnames listed for the widget. Add the PR's preview hostname (for example `debtcat-e5451--pr3-abc123.web.app`) to the existing widget in Cloudflare > Turnstile. The hostname stays the same for the life of the PR's channel.
 
+### Or do it all in one command
+
+```sh
+CLOUDFLARE_API_TOKEN=... CLOUDFLARE_ACCOUNT_ID=... OPENAI_API_KEY=... TURNSTILE_SECRET=... \
+  node workers/notice-scan/setup-preview.mjs debtcat-e5451--pr3-abc123.web.app
+```
+
+The token needs Workers Scripts Edit and Turnstile Edit. Add `--dry-run` to check the token and the widget first. The script deploys, sets both secrets, adds the hostname to the widget (keeping the existing ones) and checks the Worker answers.
+
 The live Worker (`npx wrangler deploy`, no `--env`) waits for the lawyer review.
 
 ## Test
