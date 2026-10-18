@@ -24,4 +24,4 @@ Then open http://localhost:5050. No install needed.
 
 ## Ship it
 
-A merge to `main` deploys debtcat.com. Nothing merges without the owner's OK. Every PR gets a preview link and screenshots at 390 and 1440 wide. Details in [docs/runbook.md](docs/runbook.md).
+A merge to `main` deploys debtcat.com. Claude merges its own PRs once they are checked (standing OK from Leo, 2026-10-18). Other contributors get Leo's or Claude's review first. Every PR gets a preview link and screenshots at 390 and 1440 wide. Details in [docs/runbook.md](docs/runbook.md).

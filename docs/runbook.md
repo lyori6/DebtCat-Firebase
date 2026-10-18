@@ -18,7 +18,7 @@ Tests use Node's built-in runner, no install: `node --test` (the notice scan che
 | PR previews | Firebase preview channel per PR (workflow on the POC branch) | Workers preview URL per PR |
 | Backend | Each Worker on its own: pasted into the Cloudflare dashboard, or `npx wrangler deploy` from its folder | Same deploy as the site |
 
-**A merge to `main` deploys debtcat.com. Never merge without Leo's OK.**
+**A merge to `main` deploys debtcat.com.** Leo gave Claude a standing OK to merge on 2026-10-18. Check the preview first, and know the rollback before you merge.
 
 ## Secrets
 
