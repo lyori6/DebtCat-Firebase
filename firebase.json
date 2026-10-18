@@ -5,7 +5,15 @@
       "firebase.json",
       "**/.*",
       "**/node_modules/**",
-      "articles/DebtCat - Articles.csv"
+      "articles/DebtCat - Articles.csv",
+      "archive/**",
+      "article-migration-script/**",
+      "s/dispute-options---test.html",
+      "header-test.html",
+      "header-test-white.html",
+      "home-copy.html",
+      "old-home.html",
+      "icon-test.html"
     ],
     "rewrites": [
       {

@@ -20,6 +20,10 @@ Firebase Hosting serves static files from `public/`. That includes archival-look
 
 The remaining dispute workflow uses browser state and external Cloudflare Workers. Backend services include mail, email, and payments. Public-copy cleanup must preserve their code and the dispute-letter legal text.
 
+## DebtCat 2.0 (approved 2026-10-18)
+
+The owner approved rebuilding the backend of the letter flow and moving hosting off Firebase, while keeping the static pages. Scope and order are in [plan-2.0.md](plan-2.0.md). This approval covers that plan only. Legal constraints still apply in full.
+
 ## Future work is separate
 
 Scanner development, classification, deadline calculations, platform migrations, redesigns, monetization, and backend rewrites require separate scopes. Do not infer legal conclusions from document classification or extracted fields.

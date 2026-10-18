@@ -619,8 +619,6 @@ document.addEventListener('DOMContentLoaded', function () {
     };
     // Store submittedData in local storage
     localStorage.setItem('submittedData', JSON.stringify(submittedData));
-    // Log submitted data before sending
-    console.log('Form submission data:', submittedData);
     // Send the submitted data to Cloudflare Worker
     try {
       const response = await fetch('https://glog-dspt-ml-forms.debtcatai.workers.dev/', {
@@ -687,7 +685,6 @@ function addressAutocomplete(containerElement) {
     });
     promise.then((data) => {
       spinnerElement.style.display = 'none';
-      console.log('API Response:', data);
       const autocompleteItemsElement = document.createElement("div");
       autocompleteItemsElement.setAttribute("class", "autocomplete-items");
       containerElement.appendChild(autocompleteItemsElement);
