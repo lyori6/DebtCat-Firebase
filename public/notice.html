@@ -109,7 +109,10 @@
         <!-- Screen 3: check your details -->
         <section id="check" class="step" hidden>
           <h1 tabindex="-1">Check your details</h1>
-          <p>We filled these in from your photo. Fix anything that's wrong, and add anything we missed.</p>
+          <div id="checkSummary" class="card summary">
+            <p id="summaryText"></p>
+            <p id="summaryLinks" hidden></p>
+          </div>
           <div id="courtNote" class="card court" hidden>
             <p><strong>Your notice mentions a court or a lawsuit.</strong> If you have been sued, court deadlines matter.
               You can <a href="https://www.lsc.gov/about-lsc/what-legal-aid/get-legal-help" target="_blank" rel="noopener">find free legal help near you</a>.</p>
@@ -117,6 +120,9 @@
           <div class="msgs" hidden>
             <span data-msg="missing">We didn't find this on your notice. Add it if it's there.</span>
             <span data-msg="unsure">Please check this. We weren't sure we read it right.</span>
+            <span data-msg="allFound">We filled in your details from your photo. Please check them before you go on.</span>
+            <span data-msg="oneToCheck">We filled in most of your details. Please check the 1 box marked in orange:</span>
+            <span data-msg="someToCheck">We filled in most of your details. Please check the {n} boxes marked in orange:</span>
           </div>
           <form id="checkForm">
             <div class="card">
@@ -130,21 +136,22 @@
                 <div><label for="collectorState">State</label><input id="collectorState" maxlength="2" pattern="[A-Za-z]{2}" title="Two letters, like CA" autocomplete="off"></div>
                 <div><label for="collectorZip">ZIP code</label><input id="collectorZip" inputmode="numeric" autocomplete="off"></div>
               </div>
-              <label for="currentCreditor">Who the debt is owed to now</label>
+              <label for="currentCreditor">Who the debt is owed to now <span class="opt">(optional)</span></label>
               <input id="currentCreditor" autocomplete="off">
-              <label for="originalCreditor">Original creditor, if the notice lists one</label>
+              <button type="button" id="sameAsOriginal" class="link-button" hidden>Same as the original creditor</button>
+              <label for="originalCreditor">Original creditor <span class="opt">(optional)</span></label>
               <input id="originalCreditor" autocomplete="off">
               <label for="accountNumber">Account number</label>
               <input id="accountNumber" autocomplete="off">
               <label for="currentAmount">Amount the notice says you owe now ($)</label>
               <input id="currentAmount" inputmode="decimal" pattern="\d+(\.\d{1,2})?" title="Numbers only, like 1234.56" autocomplete="off">
               <div class="row">
-                <div><label for="itemizationDate">Starting date on the notice</label><input id="itemizationDate" type="date"></div>
-                <div><label for="amountOnItemizationDate">Amount owed on that date ($)</label><input id="amountOnItemizationDate" inputmode="decimal" pattern="\d+(\.\d{1,2})?" title="Numbers only, like 1234.56" autocomplete="off"></div>
+                <div><label for="itemizationDate">Starting date on the notice <span class="opt">(optional)</span></label><input id="itemizationDate" type="date"></div>
+                <div><label for="amountOnItemizationDate">Amount owed on that date ($) <span class="opt">(optional)</span></label><input id="amountOnItemizationDate" inputmode="decimal" pattern="\d+(\.\d{1,2})?" title="Numbers only, like 1234.56" autocomplete="off"></div>
               </div>
               <div class="row">
-                <div><label for="noticeDate">Date on the notice</label><input id="noticeDate" type="date"></div>
-                <div><label for="respondByDate">Your notice says respond by</label><input id="respondByDate" type="date"></div>
+                <div><label for="noticeDate">Date on the notice <span class="opt">(optional)</span></label><input id="noticeDate" type="date"></div>
+                <div><label for="respondByDate">Your notice says respond by <span class="opt">(optional)</span></label><input id="respondByDate" type="date"></div>
               </div>
             </div>
             <div class="card">
@@ -193,6 +200,13 @@
         /* An empty date box shows today's date in Safari. Hide it until the user picks a date. */
         .notice input[type=date].empty:not(:focus)::-webkit-datetime-edit { color: transparent; }
         .notice .flag { margin: 4px 0 0; color: #7A4100; font-size: .9em; }
+        .notice .opt { font-weight: 400; color: #555; }
+        .notice .summary { background: #FFF8EC; border: 2px solid #B25E00; }
+        .notice .summary.done { background: #F5F7FF; border: 1px solid #DFE5FD; }
+        .notice .summary p { margin: 0; }
+        .notice .summary #summaryLinks { margin-top: 8px; font-weight: 700; }
+        .notice .link-button { margin: 6px 0 0; padding: 0; border: 0; background: none; color: #2341c4; font: inherit; font-size: .95em; text-decoration: underline; cursor: pointer; }
+        .notice .link-button:focus-visible { outline: 3px solid #3358EF; outline-offset: 2px; }
         .notice .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0 12px; }
         .notice .row.three { grid-template-columns: 2fr 1fr 1fr; }
         @media (max-width: 600px) {
@@ -401,7 +415,47 @@
             .then(() => { e.target.textContent = 'Copied'; }, () => { e.target.textContent = 'Select the text above to copy it'; });
         });
 
+        // Optional fields aren't needed for the dispute form, so a blank one isn't flagged. A value we weren't sure of still is.
+        const OPTIONAL = ['currentCreditor', 'originalCreditor', 'itemizationDate', 'amountOnItemizationDate', 'noticeDate', 'respondByDate'];
+        const sameAs = document.getElementById('sameAsOriginal');
+        const currentCreditor = document.getElementById('currentCreditor');
+        const originalCreditor = document.getElementById('originalCreditor');
+        // The user picks this. We never copy the original creditor into "owed to now" on our own.
+        function updateSameAs() {
+          sameAs.hidden = !!currentCreditor.value.trim() || !originalCreditor.value.trim();
+        }
+        currentCreditor.addEventListener('input', updateSameAs);
+        originalCreditor.addEventListener('input', updateSameAs);
+        sameAs.addEventListener('click', () => {
+          currentCreditor.value = originalCreditor.value.trim();
+          updateSameAs();
+          currentCreditor.focus();
+        });
+
+        function summarize(flagged) {
+          const box = document.getElementById('checkSummary');
+          const links = document.getElementById('summaryLinks');
+          box.classList.toggle('done', !flagged.length);
+          document.getElementById('summaryText').textContent = !flagged.length ? msg('check', 'allFound')
+            : flagged.length === 1 ? msg('check', 'oneToCheck') : msg('check', 'someToCheck').replace('{n}', flagged.length);
+          links.replaceChildren();
+          flagged.forEach((name, i) => {
+            const a = document.createElement('a');
+            a.href = '#' + name;
+            // City, State and ZIP appear twice, so say whose they are.
+            let text = document.querySelector('label[for="' + name + '"]').firstChild.textContent.trim();
+            const who = name.startsWith('consumer') ? 'Your ' : name.startsWith('collector') ? 'Collector ' : '';
+            if (who && !/^(your|collector|debt)/i.test(text)) text = who + (/^[A-Z][a-z]/.test(text) ? text[0].toLowerCase() + text.slice(1) : text);
+            a.textContent = text;
+            a.addEventListener('click', e => { e.preventDefault(); document.getElementById(name).focus(); });
+            if (i) links.append(', ');
+            links.append(a);
+          });
+          links.hidden = !flagged.length;
+        }
+
         function fill(data) {
+          const flagged = [];
           TEXT_FIELDS.forEach(name => {
             const input = document.getElementById(name);
             const f = data[name] || { value: null, sure: false };
@@ -411,7 +465,8 @@
             if (old) old.remove();
             input.classList.remove('flagged');
             input.removeAttribute('aria-describedby');
-            if (f.value && f.sure) return;
+            if (f.value ? f.sure : OPTIONAL.includes(name)) return;
+            flagged.push(name);
             const flag = document.createElement('p');
             flag.className = 'flag';
             flag.id = name + 'Flag';
@@ -421,6 +476,8 @@
             input.insertAdjacentElement('afterend', flag);
           });
           document.getElementById('courtNote').hidden = !data.mentionsCourt;
+          updateSameAs();
+          summarize(flagged);
         }
 
         // The checked details go to the dispute form in sessionStorage, which it reads once and clears.
