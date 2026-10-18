@@ -27,6 +27,7 @@ Audit all Firebase-deployable HTML and metadata, including archival copies, shar
 - Firebase Hosting serves `public/`; see `firebase.json` for exclusions and routing.
 - Cloudflare Workers provide backend services. Mail uses PostGrid, email uses SendGrid, and payments use Stripe. Scope backend changes separately.
 - Preserve the existing dispute workflow and its user selections.
+- Code changes follow [.claude/skills/ponytail/SKILL.md](.claude/skills/ponytail/SKILL.md): the smallest complete change, no new frameworks, never cutting validation, security, accessibility, privacy or legal guardrails.
 - Keep work small and reviewable. Do not infer authorization for scanner work, migrations, monetization, or redesigns from strategy notes.
 - Inspect git status first, preserve unrelated work, and stage exact intended paths. Never use broad staging or destructive cleanup to prepare a commit.
 - A push to `main` triggers the Firebase Hosting deployment workflow.
