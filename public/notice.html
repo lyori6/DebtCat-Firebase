@@ -150,6 +150,14 @@
           </form>
         </section>
 
+        <!-- Preview only: a copyable report of what the scan found. Field names and status, never the values. -->
+        <div id="testReport" class="card" hidden>
+          <h2>Test report (preview only)</h2>
+          <p class="note">This lists which fields were found. It has no names, numbers or other details from your notice.</p>
+          <pre id="reportText"></pre>
+          <button type="button" class="btn secondary" id="copyReport">Copy report</button>
+        </div>
+
         <p class="disclaimer">DebtCat is a free self-help tool for understanding debt collection notices. It is not a law firm and does not provide legal advice.</p>
       </div>
 
@@ -178,6 +186,7 @@
         @media (prefers-reduced-motion: reduce) { .notice .spinner { animation-duration: 3s; } }
         .notice h1:focus { outline: none; }
         .notice .actions { display: flex; flex-wrap: wrap; }
+        .notice pre { white-space: pre-wrap; font-size: .9em; background: #f6f6f6; padding: 12px; border-radius: 6px; }
         .notice .disclaimer { display: block; clear: both; margin-top: 40px; font-size: .9em; color: #555; }
         .notice a { color: #2341c4; }
       </style>
@@ -265,11 +274,13 @@
           if (!file || !token) return;
           const sentToken = token;
           show('reading');
+          const started = Date.now();
           let image;
           try {
             image = await shrink(file);
           } catch (e) {
             newToken();
+            report(e.message === 'too_large' ? 'too_large' : 'bad_photo');
             return problem(e.message === 'too_large' ? 'too_large' : 'bad_photo');
           }
           let res, data;
@@ -283,23 +294,42 @@
           } catch (e) {
             res = null;
           }
+          const photoKb = Math.round(image.length * 3 / 4 / 1024);
           image = null;
           newToken();
-          if (!res || !res.ok) return problem(data && data.error);
+          const secs = ((Date.now() - started) / 1000).toFixed(1);
+          if (!res || !res.ok) {
+            report('error ' + (res ? res.status : 'network') + ' ' + ((data && data.error) || ''), secs, photoKb);
+            return problem(data && data.error);
+          }
+          report(data.isCollectionNotice ? 'ok' : 'not a collection notice', secs, photoKb, data);
           if (!data.isCollectionNotice) return problem('not_notice');
           fill(data);
           show('check');
         });
 
+        // Preview only. Field names and found / unsure / missing, never the values.
+        function report(result, secs, photoKb, data) {
+          if (live) return;
+          const lines = ['DebtCat scan report', 'Page: ' + location.host, 'Result: ' + result];
+          if (secs) lines.push('Time: ' + secs + ' s', 'Photo sent: ' + photoKb + ' KB');
+          if (data) {
+            lines.push('mentionsCourt: ' + data.mentionsCourt);
+            TEXT_FIELDS.forEach(name => {
+              const f = data[name] || {};
+              lines.push(name + ': ' + (!f.value ? 'missing' : f.sure ? 'found' : 'unsure'));
+            });
+          }
+          document.getElementById('reportText').textContent = lines.join('\n');
+          document.getElementById('testReport').hidden = false;
+          console.log(lines.join('\n'));
+        }
+        document.getElementById('copyReport').addEventListener('click', e => {
+          navigator.clipboard.writeText(document.getElementById('reportText').textContent)
+            .then(() => { e.target.textContent = 'Copied'; }, () => { e.target.textContent = 'Select the text above to copy it'; });
+        });
+
         function fill(data) {
-          // For testing: which fields came back, in the browser console. Status only, never the values.
-          const status = {};
-          TEXT_FIELDS.forEach(name => {
-            const f = data[name] || {};
-            status[name] = !f.value ? 'missing' : f.sure ? 'found' : 'unsure';
-          });
-          console.table(status);
-          console.log('mentionsCourt:', data.mentionsCourt);
           TEXT_FIELDS.forEach(name => {
             const input = document.getElementById(name);
             const f = data[name] || { value: null, sure: false };

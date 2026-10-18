@@ -22,7 +22,9 @@ The live Worker (`npx wrangler deploy`, no `--env`) waits for the lawyer review.
 
 ```sh
 node --test workers/notice-scan/test.mjs                      # request checks, no network
-OPENAI_API_KEY=sk-... node --test workers/notice-scan/test.mjs  # also reads the 3 synthetic notices with the real model
+OPENAI_API_KEY=sk-... node --test workers/notice-scan/test.mjs  # also reads the 4 synthetic notices with the real model
 ```
 
-The fixtures are synthetic notices built by `fixtures/make-fixtures.mjs`. Never put real notices in this repo.
+Notices 1 to 3 are built by `fixtures/make-fixtures.mjs`. Notice 4 is a phone photo of a printed notice marked "SAMPLE, FICTIONAL DATA". Never put real notices in this repo.
+
+On the preview, each scan shows a "Test report" box under the page with found, unsure or missing per field (no values). Copy it into the project thread. The box never shows on debtcat.com.

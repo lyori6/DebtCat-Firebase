@@ -1,6 +1,6 @@
 // Self-check for the notice-scan Worker. Run: node --test workers/notice-scan/test.mjs
 // Always runs the request checks with a fake OpenAI and Turnstile.
-// With OPENAI_API_KEY set, it also sends the three synthetic notices to the real model
+// With OPENAI_API_KEY set, it also sends the four synthetic notices to the real model
 // and checks every field against fixtures/*.expected.json.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -108,7 +108,7 @@ test('cleans the model output', async () => {
 });
 
 // Live run against the real model. Turnstile stays faked; everything else is real.
-for (const n of [1, 2, 3]) {
+for (const n of [1, 2, 3, 4]) {
   test(`reads synthetic notice-${n} with the real model`, { skip: !process.env.OPENAI_API_KEY && 'set OPENAI_API_KEY to run' }, async t => {
     globalThis.fetch = (url, init) => url.startsWith('https://challenges.cloudflare.com/') ? fakeFetch(url, init) : realFetch(url, init);
     t.after(() => { globalThis.fetch = fakeFetch; });

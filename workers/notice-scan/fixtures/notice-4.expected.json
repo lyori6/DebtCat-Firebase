@@ -1,0 +1,58 @@
+{
+  "isCollectionNotice": true,
+  "collectorName": {
+    "value": "Summit Recovery Group"
+  },
+  "collectorAddress": {
+    "value": "5000 Harbor View Drive, Suite 300"
+  },
+  "collectorCity": {
+    "value": "Riverton"
+  },
+  "collectorState": {
+    "value": "CA"
+  },
+  "collectorZip": {
+    "value": "94536"
+  },
+  "currentCreditor": {
+    "value": null
+  },
+  "originalCreditor": {
+    "value": "Horizon Retail"
+  },
+  "accountNumber": {
+    "value": "TEST-004281"
+  },
+  "itemizationDate": {
+    "value": null
+  },
+  "amountOnItemizationDate": {
+    "value": null
+  },
+  "currentAmount": {
+    "value": "1557.40"
+  },
+  "noticeDate": {
+    "value": "2025-10-10"
+  },
+  "respondByDate": {
+    "value": null
+  },
+  "consumerName": {
+    "value": "Jordan Sample"
+  },
+  "consumerAddress": {
+    "value": "123 Pinecrest Dr"
+  },
+  "consumerCity": {
+    "value": "Redwood City"
+  },
+  "consumerState": {
+    "value": "CA"
+  },
+  "consumerZip": {
+    "value": "94063"
+  },
+  "mentionsCourt": false
+}
