@@ -24,6 +24,8 @@ Audit all Firebase-deployable HTML and metadata, including archival copies, shar
 
 ## Repository and scope
 
+- How the system works and where it is heading: [docs/architecture.md](docs/architecture.md). Build order: [docs/plan-2.0.md](docs/plan-2.0.md). Decisions: [docs/decisions.md](docs/decisions.md). Update the matching doc in the same PR as the change.
+- Keep security weaknesses out of public docs, commit messages and PR text until they are fixed. This repo is public.
 - Firebase Hosting serves `public/`; see `firebase.json` for exclusions and routing.
 - Cloudflare Workers provide backend services. Mail uses PostGrid, email uses SendGrid, and payments use Stripe. Scope backend changes separately.
 - Preserve the existing dispute workflow and its user selections.
