@@ -40,7 +40,8 @@ Browser ── debtcat.com ──► one Cloudflare Worker "debtcat"
                              │
                              └─ /api/* (Worker code in worker/)
                                  ├─ POST /api/scan            notice photo → fields      → OpenAI
-                                 ├─ POST /api/count           step counts only           → Analytics Engine
+                                 ├─ POST /api/count           usage counts only          → Analytics Engine
+                                 ├─ GET  /stats               counts by day, real vs test (key protected)
                                  ├─ POST /api/chat            DebtChat                   → OpenAI
                                  ├─ GET  /api/address         autocomplete               → Geoapify
                                  ├─ POST /api/letters/email   fill letter, email it      → SendGrid
@@ -67,7 +68,8 @@ Browser ── debtcat.com ──► one Cloudflare Worker "debtcat"
 | Mail order (fields for one paid letter) | KV, `ORDERS` | Deleted after mailing, at most 7 days | Stripe (payment only), PostGrid (the letter), SendGrid (the copy) |
 | Emailed letter | Not stored | n/a | SendGrid |
 | Throttle and daily caps | Durable Object `LIMITS` | Hashed key and a count, reset daily | Nobody |
-| Step counts | Workers Analytics Engine | Cloudflare's retention | Nobody. Event name only, no IP or ID. |
+| Usage counts | Workers Analytics Engine | Cloudflare's retention | Nobody. Event, page, live or preview, tester flag, day. No IP, ID or cookie (D21). |
+| Tester flag | Leo's own browsers, localStorage `dc_tester` | Until he turns it off with `?tester=off` | Nobody (D22) |
 | DebtChat messages | Not stored | n/a | OpenAI |
 | Analytics and ad pixels | Third parties | Their terms | Only after cookie consent (`public/js/consent.js`) |
 
