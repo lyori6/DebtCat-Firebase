@@ -15,6 +15,7 @@
   <link href="/images/favicon.png" rel="shortcut icon" type="image/x-icon">
   <link href="/images/webclip.png" rel="apple-touch-icon">
   <script src="/js/consent.js"></script>
+  <script src="/js/qrcode.js"></script>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 </head>
 <body class="body">
@@ -58,8 +59,23 @@
           <div class="card">
             <div id="captcha"></div>
             <p id="captchaWait" class="note" aria-live="polite">One moment while we run a quick security check.</p>
-            <label for="photo" class="photo-button">Take or upload a photo</label>
-            <input type="file" id="photo" accept="image/*" capture="environment" disabled>
+            <p id="captchaFail" class="flag" role="alert" hidden>The security check didn't load, so you can't send a photo yet. Refresh the page to try again, or type your details in instead.</p>
+            <div class="pick">
+              <div id="dropZone" class="drop">
+                <!-- Phone: open the camera, or pick a saved photo -->
+                <input type="file" id="camera" class="photo phone-only" accept="image/*" capture="environment" disabled>
+                <label for="camera" class="photo-button phone-only">Take a photo</label>
+                <p class="desktop-only drop-text"><strong>Drag your photo here</strong><br>or</p>
+                <input type="file" id="photo" class="photo" accept="image/*" disabled>
+                <label for="photo" class="photo-button"><span class="phone-only">Upload a photo</span><span class="desktop-only">Choose a photo</span></label>
+                <p class="note">One photo at a time.</p>
+              </div>
+              <!-- Desktop only: open this same page on a phone. Only the page link is in the code, never a photo. -->
+              <div class="qr desktop-only">
+                <img id="qrImg" alt="QR code that opens this page on your phone" width="132" height="132">
+                <p class="note"><strong>Use your phone instead.</strong> Point your phone camera at this code to open this page there.</p>
+              </div>
+            </div>
             <p class="note">Lay the notice flat in good light, with the whole first page in the photo.</p>
             <p class="note"><strong>Your privacy:</strong> we send your photo to OpenAI to read it. DebtCat doesn't save your photo.</p>
           </div>
@@ -184,11 +200,26 @@
           .notice .photo-button, .notice .btn { display: block; width: 100%; box-sizing: border-box; margin-right: 0; text-align: center; }
         }
         .notice .note { color: #555; font-size: .95em; }
-        .notice #photo { position: absolute; width: 1px; height: 1px; opacity: 0; }
+        .notice .photo { position: absolute; width: 1px; height: 1px; opacity: 0; }
+        .notice .desktop-only { display: none; }
+        .notice .pick { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; margin-bottom: 16px; }
+        .notice .drop { flex: 1 1 260px; }
+        .notice .drop-text { margin: 0; }
+        @media (hover: hover) and (pointer: fine) {
+          .notice .pick .phone-only { display: none; }
+          .notice span.desktop-only { display: inline; }
+          .notice .desktop-only { display: block; }
+          .notice .drop { padding: 24px; border: 2px dashed #767676; border-radius: 12px; background: #fff; text-align: center; }
+          .notice .drop.over { border-color: #3358EF; background: #EEF2FF; }
+          .notice .drop .photo-button { margin: 8px 0 12px; }
+          .notice .qr { flex: 0 1 200px; text-align: center; }
+          .notice .qr:not(.ready) { display: none; }
+          .notice .qr img { display: block; margin: 0 auto 8px; image-rendering: pixelated; }
+        }
         .notice .photo-button, .notice .btn { display: inline-block; margin: 16px 12px 12px 0; padding: 14px 24px; background: #fff; color: #000; border: 3px solid #000; border-radius: 8px; box-shadow: 4px 4px 0 #000; font: inherit; font-weight: 700; cursor: pointer; }
         .notice .photo-button:hover, .notice .btn:hover { background: #CEFF4B; }
-        .notice #photo:focus-visible + .photo-button, .notice .btn:focus-visible { outline: 3px solid #3358EF; outline-offset: 3px; }
-        .notice #photo:disabled + .photo-button { color: #6b6b6b; border-color: #a0a0a0; box-shadow: none; cursor: not-allowed; background: #f0f0f0; }
+        .notice .photo:focus-visible + .photo-button, .notice .btn:focus-visible { outline: 3px solid #3358EF; outline-offset: 3px; }
+        .notice .photo:disabled + .photo-button { color: #6b6b6b; border-color: #a0a0a0; box-shadow: none; cursor: not-allowed; background: #f0f0f0; }
         .notice .btn.secondary { box-shadow: none; border-width: 2px; }
         .notice .spinner { width: 40px; height: 40px; margin: 24px 0; border-radius: 50%; border: 5px solid #dfe5fd; border-top-color: #3358EF; animation: notice-spin 1s linear infinite; }
         @keyframes notice-spin { to { transform: rotate(1turn); } }
@@ -214,7 +245,8 @@
         const WORKER_URL = live ? 'https://notice-scan.debtcatai.workers.dev/' : 'https://notice-scan-preview.debtcatai.workers.dev/';
         const SITEKEY = local ? '1x00000000000000000000AA' : '0x4AAAAAAAiA6_L9K0nk7Zwy';
 
-        const photo = document.getElementById('photo');
+        const inputs = [document.getElementById('photo'), document.getElementById('camera')];
+        const dropZone = document.getElementById('dropZone');
         let token = null;
         let widgetId = null;
 
@@ -236,7 +268,8 @@
         // Turnstile gives one token per scan. The photo button waits for it.
         function setToken(t) {
           token = t;
-          photo.disabled = !t;
+          document.getElementById('captchaFail').hidden = true;
+          inputs.forEach(i => { i.disabled = !t; });
           document.getElementById('captchaWait').hidden = !!t;
         }
         function renderCaptcha() {
@@ -245,7 +278,11 @@
             sitekey: SITEKEY,
             callback: setToken,
             'expired-callback': () => setToken(null),
-            'error-callback': () => setToken(null)
+            'error-callback': () => {
+              setToken(null);
+              document.getElementById('captchaWait').hidden = true;
+              document.getElementById('captchaFail').hidden = false;
+            }
           });
         }
         function newToken() {
@@ -277,10 +314,10 @@
           throw new Error('too_large');
         }
 
-        photo.addEventListener('change', async () => {
-          const file = photo.files[0];
-          photo.value = '';
+        // shortcut: one photo per scan, add bulk scans when we support multi-page notices.
+        async function scan(file) {
           if (!file || !token) return;
+          if (!file.type.startsWith('image/')) return problem('bad_type');
           const sentToken = token;
           show('reading');
           const started = Date.now();
@@ -315,7 +352,31 @@
           if (!data.isCollectionNotice) return problem('not_notice');
           fill(data);
           show('check');
+        }
+        inputs.forEach(input => input.addEventListener('change', () => {
+          const file = input.files[0];
+          input.value = '';
+          scan(file);
+        }));
+
+        // Desktop drop area. Stop the browser from opening a photo dropped anywhere else on the page.
+        window.addEventListener('dragover', e => e.preventDefault());
+        window.addEventListener('drop', e => e.preventDefault());
+        dropZone.addEventListener('dragover', () => dropZone.classList.add('over'));
+        dropZone.addEventListener('dragleave', () => dropZone.classList.remove('over'));
+        dropZone.addEventListener('drop', e => {
+          dropZone.classList.remove('over');
+          scan(e.dataTransfer.files[0]);
         });
+
+        // Desktop QR code with this page's link, so the user can scan on their phone instead.
+        if (matchMedia('(hover: hover) and (pointer: fine)').matches && typeof qrcode !== 'undefined') {
+          const qr = qrcode(0, 'M');
+          qr.addData(location.origin + location.pathname);
+          qr.make();
+          document.getElementById('qrImg').src = qr.createDataURL(4, 2);
+          document.querySelector('.notice .qr').classList.add('ready');
+        }
 
         // Preview only. Field names and found / unsure / missing, never the values.
         function report(result, secs, photoKb, data) {
