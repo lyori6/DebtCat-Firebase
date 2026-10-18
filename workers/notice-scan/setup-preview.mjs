@@ -12,9 +12,12 @@ const WORKER_URL = 'https://notice-scan-preview.debtcatai.workers.dev';
 const HOST_RE = /^(debtcat-e5451--[a-z0-9-]+\.web\.app|localhost)$/;
 const API = 'https://api.cloudflare.com/client/v4';
 
+// Only these fields are accepted by PUT; the GET also returns read-only ones (secret, dates, last_modified_via).
+const FIELDS = ['name', 'mode', 'region', 'bot_fight_mode', 'clearance_level', 'ephemeral_id', 'offlabel'];
+
 // Returns the PUT body for the widget with the hostname added. PUT replaces the whole widget, so keep every field.
 export function withHostname(widget, host) {
-  const { sitekey, secret, created_on, modified_on, ...keep } = widget;
+  const keep = Object.fromEntries(FIELDS.filter((k) => k in widget).map((k) => [k, widget[k]]));
   return { ...keep, domains: [...new Set([...(widget.domains || []), host])] };
 }
 
