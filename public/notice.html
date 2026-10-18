@@ -190,6 +190,8 @@
         .notice input:not([type=file]) { display: block; width: 100%; box-sizing: border-box; height: 44px; margin: 4px 0 0; padding: 8px 12px; border: 1px solid #767676; border-radius: 6px; font: inherit; background: #fff; }
         .notice input:focus { outline: 3px solid #3358EF; outline-offset: 1px; }
         .notice input.flagged { border: 2px solid #B25E00; background: #FFF8EC; }
+        /* An empty date box shows today's date in Safari. Hide it until the user picks a date. */
+        .notice input[type=date].empty:not(:focus)::-webkit-datetime-edit { color: transparent; }
         .notice .flag { margin: 4px 0 0; color: #7A4100; font-size: .9em; }
         .notice .row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0 12px; }
         .notice .row.three { grid-template-columns: 2fr 1fr 1fr; }
@@ -404,6 +406,7 @@
             const input = document.getElementById(name);
             const f = data[name] || { value: null, sure: false };
             input.value = f.value || '';
+            input.classList.toggle('empty', !input.value);
             const old = document.getElementById(name + 'Flag');
             if (old) old.remove();
             input.classList.remove('flagged');
@@ -429,6 +432,7 @@
           location.href = '/dispute-form';
         });
 
+        document.querySelectorAll('.notice input[type=date]').forEach(i => i.addEventListener('input', () => i.classList.toggle('empty', !i.value)));
         document.querySelectorAll('.notice .retake').forEach(b => b.addEventListener('click', () => show('start')));
         renderCaptcha();
       })();
