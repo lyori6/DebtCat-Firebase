@@ -99,7 +99,7 @@
               You can <a href="https://www.lsc.gov/about-lsc/what-legal-aid/get-legal-help" target="_blank" rel="noopener">find free legal help near you</a>.</p>
           </div>
           <div class="msgs" hidden>
-            <span data-msg="missing">We couldn't read this. Add it if it's on your notice.</span>
+            <span data-msg="missing">We didn't find this on your notice. Add it if it's there.</span>
             <span data-msg="unsure">Please check this. We weren't sure we read it right.</span>
           </div>
           <form id="checkForm">
@@ -292,6 +292,14 @@
         });
 
         function fill(data) {
+          // For testing: which fields came back, in the browser console. Status only, never the values.
+          const status = {};
+          TEXT_FIELDS.forEach(name => {
+            const f = data[name] || {};
+            status[name] = !f.value ? 'missing' : f.sure ? 'found' : 'unsure';
+          });
+          console.table(status);
+          console.log('mentionsCourt:', data.mentionsCourt);
           TEXT_FIELDS.forEach(name => {
             const input = document.getElementById(name);
             const f = data[name] || { value: null, sure: false };
