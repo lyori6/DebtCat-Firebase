@@ -51,3 +51,12 @@ Today each old Worker holds its own copies. Phase 1 lists them by name.
 | Notice scan says "something went wrong" | Is the scan Worker deployed for that host? Preview pages call the preview Worker. |
 | Turnstile buttons stay grey on a preview | The preview hostname isn't listed on the Turnstile widget |
 | Chat stops answering | OpenAI key and spend limit on the chat Worker |
+
+## Rename the repo to `debtcat` (D14)
+
+Safe at any time between merges. Prod keeps deploying, because the deploy secret belongs to the repo and survives a rename.
+
+1. GitHub: Settings, General, Repository name: `debtcat`. GitHub redirects the old URL, so open PRs and old links keep working.
+2. Every local clone: `git remote set-url origin https://github.com/lyori6/debtcat.git`, then `git fetch` to check.
+3. Claude project settings: point the repository at `lyori6/debtcat`.
+4. Merge one small PR and check that the Firebase deploy action still runs green.

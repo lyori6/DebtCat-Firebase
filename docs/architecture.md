@@ -89,7 +89,7 @@ debtcat/                       renamed from DebtCat-Firebase
 └─ AGENTS.md  CLAUDE.md  README.md
 ```
 
-`public/` keeps its name so links, scripts and docs don't churn. Old dashboard Workers are copied to `workers/legacy/` for reference only, and deleted once retired.
+`public/` keeps its name so links, scripts and docs don't churn. Old dashboard Worker code is exported to the private project folder for reference, not to this public repo, because it may hold keys.
 
 ### Platform pieces
 
@@ -103,6 +103,9 @@ debtcat/                       renamed from DebtCat-Firebase
 | Bot check | Turnstile, checked on the server | Already used. Check `hostname` and `action` too. |
 | Counts | Workers Analytics Engine | No cookies, no personal data |
 | Stripe | The `stripe` npm package (already used by the old Workers) | Webhook signature checks should not be hand-written |
-| PDF | jsPDF (already used) | To confirm it runs in a Worker. If not, PostGrid's HTML template renders the mailed letter. |
+| PDF | jsPDF in the browser for downloads. In the Worker only if a test shows it fits the free plan's 10 ms CPU limit. | Otherwise PostGrid renders the mailed letter from its HTML template, and the email copy is HTML (D18). |
 | Previews | Workers Builds preview URLs per PR | Replaces Firebase preview channels |
+| DNS | Cloudflare DNS, free plan. Domain stays registered at Porkbun. | Workers can only serve a domain on Cloudflare DNS (D19) |
+
+Cost: every piece above fits a free plan (D17). Only the OpenAI API costs money.
 | Rollback | `wrangler rollback` to the last version | Seconds, no rebuild |
