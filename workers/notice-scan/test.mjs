@@ -1,7 +1,8 @@
-// Self-check for the notice-scan Worker. Run: node workers/notice-scan/test.mjs
+// Self-check for the notice-scan Worker. Run: node --test workers/notice-scan/test.mjs
 // Always runs the request checks with a fake OpenAI and Turnstile.
 // With OPENAI_API_KEY set, it also sends the three synthetic notices to the real model
 // and checks every field against fixtures/*.expected.json.
+import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -41,52 +42,51 @@ function scan(body, { origin = ORIGIN, method = 'POST' } = {}) {
   }), env);
 }
 
-const checks = [];
-const check = (name, fn) => checks.push([name, fn]);
+globalThis.fetch = fakeFetch;
 
-check('rejects an unknown origin', async () => {
+test('rejects an unknown origin', async () => {
   assert.equal((await scan({}, { origin: 'https://evil.example' })).status, 403);
 });
-check('rejects preview origins on the live Worker', async () => {
+test('rejects preview origins on the live Worker', async () => {
   const res = await worker.fetch(new Request('https://x/', { method: 'POST', headers: { Origin: ORIGIN } }), { ...env, ALLOW_PREVIEW: undefined });
   assert.equal(res.status, 403);
 });
-check('answers the CORS preflight', async () => {
+test('answers the CORS preflight', async () => {
   const res = await scan(null, { method: 'OPTIONS' });
   assert.equal(res.status, 200);
   assert.equal(res.headers.get('Access-Control-Allow-Origin'), ORIGIN);
 });
-check('rate limits', async () => {
+test('rate limits', async () => {
   limited = true;
   try { assert.equal((await scan({ image: jpeg, turnstileToken: 't' })).status, 429); } finally { limited = false; }
 });
-check('rejects bad JSON', async () => {
+test('rejects bad JSON', async () => {
   assert.equal((await scan('not json')).status, 400);
 });
-check('rejects a missing token', async () => {
+test('rejects a missing token', async () => {
   assert.equal((await scan({ image: jpeg })).status, 400);
 });
-check('rejects a file that is not an image', async () => {
+test('rejects a file that is not an image', async () => {
   const pdf = Buffer.from('%PDF-1.7 fake').toString('base64');
   assert.equal((await scan({ image: pdf, turnstileToken: 't' })).status, 400);
 });
-check('rejects an image over 4 MB', async () => {
+test('rejects an image over 4 MB', async () => {
   const big = jpeg.slice(0, 8) + 'A'.repeat(6 * 1024 * 1024);
   assert.equal((await scan({ image: big, turnstileToken: 't' })).status, 413);
 });
-check('rejects a failed Turnstile check', async () => {
+test('rejects a failed Turnstile check', async () => {
   turnstilePasses = false;
   try { assert.equal((await scan({ image: jpeg, turnstileToken: 't' })).status, 403); } finally { turnstilePasses = true; }
 });
-check('returns 502 when the model fails', async () => {
+test('returns 502 when the model fails', async () => {
   modelReply = null;
   assert.equal((await scan({ image: jpeg, turnstileToken: 't' })).status, 502);
 });
-check('returns 502 when the model sends invalid JSON', async () => {
+test('returns 502 when the model sends invalid JSON', async () => {
   modelReply = '{not json';
   assert.equal((await scan({ image: jpeg, turnstileToken: 't' })).status, 502);
 });
-check('cleans the model output', async () => {
+test('cleans the model output', async () => {
   modelReply = JSON.stringify({
     isCollectionNotice: true,
     collectorName: { value: '  Sample Recovery Services LLC ', sure: true },
@@ -107,35 +107,20 @@ check('cleans the model output', async () => {
   assert.equal(Object.keys(out).length, 20);
 });
 
-let failed = 0;
-globalThis.fetch = fakeFetch;
-for (const [name, fn] of checks) {
-  try { await fn(); console.log(`ok    ${name}`); } catch (e) { failed++; console.log(`FAIL  ${name}\n      ${e.message}`); }
-}
-
 // Live run against the real model. Turnstile stays faked; everything else is real.
-if (process.env.OPENAI_API_KEY) {
-  globalThis.fetch = (url, init) => url.startsWith('https://challenges.cloudflare.com/') ? fakeFetch(url, init) : realFetch(url, init);
-  for (const n of [1, 2, 3]) {
+for (const n of [1, 2, 3]) {
+  test(`reads synthetic notice-${n} with the real model`, { skip: !process.env.OPENAI_API_KEY && 'set OPENAI_API_KEY to run' }, async t => {
+    globalThis.fetch = (url, init) => url.startsWith('https://challenges.cloudflare.com/') ? fakeFetch(url, init) : realFetch(url, init);
+    t.after(() => { globalThis.fetch = fakeFetch; });
     const image = fs.readFileSync(path.join(dir, `fixtures/notice-${n}.jpg`)).toString('base64');
     const expected = JSON.parse(fs.readFileSync(path.join(dir, `fixtures/notice-${n}.expected.json`)));
     const started = Date.now();
     const res = await scan({ image, turnstileToken: 't' });
-    const secs = ((Date.now() - started) / 1000).toFixed(1);
-    if (res.status !== 200) { failed++; console.log(`FAIL  notice-${n}: status ${res.status}`); continue; }
+    assert.equal(res.status, 200);
     const out = await res.json();
-    const wrong = Object.entries(expected).filter(([k, v]) => {
-      const got = typeof v === 'boolean' ? out[k] : out[k].value;
-      return got !== (typeof v === 'boolean' ? v : v.value);
-    });
-    const unsure = Object.keys(expected).filter(k => out[k] && out[k].sure === false && out[k].value !== null);
-    if (wrong.length) failed++;
-    console.log(`${wrong.length ? 'FAIL' : 'ok  '}  notice-${n} in ${secs}s` +
-      wrong.map(([k, v]) => `\n      ${k}: expected ${JSON.stringify(typeof v === 'boolean' ? v : v.value)}, got ${JSON.stringify(typeof v === 'boolean' ? out[k] : out[k].value)}`).join('') +
-      (unsure.length ? `\n      marked unsure: ${unsure.join(', ')}` : ''));
-  }
-} else {
-  console.log('skip  live model checks (set OPENAI_API_KEY to run them)');
+    t.diagnostic(`${((Date.now() - started) / 1000).toFixed(1)}s`);
+    for (const [k, v] of Object.entries(expected)) {
+      assert.equal(typeof v === 'boolean' ? out[k] : out[k].value, typeof v === 'boolean' ? v : v.value, k);
+    }
+  });
 }
-
-process.exit(failed ? 1 : 0);

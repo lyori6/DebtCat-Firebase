@@ -21,8 +21,8 @@ The live Worker (`npx wrangler deploy`, no `--env`) waits for the lawyer review.
 ## Test
 
 ```sh
-node workers/notice-scan/test.mjs                      # request checks, no network
-OPENAI_API_KEY=sk-... node workers/notice-scan/test.mjs  # also reads the 3 synthetic notices with the real model
+node --test workers/notice-scan/test.mjs                      # request checks, no network
+OPENAI_API_KEY=sk-... node --test workers/notice-scan/test.mjs  # also reads the 3 synthetic notices with the real model
 ```
 
 The fixtures are synthetic notices built by `fixtures/make-fixtures.mjs`. Never put real notices in this repo.
