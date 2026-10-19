@@ -3,12 +3,16 @@
 import { chat } from './chat.js';
 import { address } from './address.js';
 import { count, stats } from './count.js';
+import { scan } from './scan.js';
 import { json } from './lib/json.js';
+
+export { Limits } from './lib/limits.js';
 
 const routes = {
   'POST /api/chat': chat,
   'GET /api/address': address,
   'POST /api/count': count,
+  'POST /api/scan': scan,
   'GET /stats': stats
 };
 

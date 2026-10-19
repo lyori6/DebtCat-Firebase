@@ -14,6 +14,10 @@ not_found_handling = "404-page"
 # Only these paths run Worker code. Every other request is a free static asset request.
 run_worker_first = ["/api/*", "/stats"]
 
+# No request logs. The notice scan and letters must not leave personal data in logs.
+[observability]
+enabled = false
+
 [[analytics_engine_datasets]]
 binding = "COUNTS"
 dataset = "debtcat_counts"
@@ -27,3 +31,17 @@ simple = { limit = 7, period = 60 }
 name = "ADDRESS_LIMIT"
 namespace_id = "2002"
 simple = { limit = 60, period = 60 }
+
+[[ratelimits]]
+name = "SCAN_LIMIT"
+namespace_id = "2003"
+simple = { limit = 5, period = 60 }
+
+# Daily caps (scans now, letters later). SQLite-backed, which the free plan includes.
+[[durable_objects.bindings]]
+name = "LIMITS"
+class_name = "Limits"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["Limits"]
