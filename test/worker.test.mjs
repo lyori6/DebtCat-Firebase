@@ -31,12 +31,16 @@ test('unknown API paths are 404, never assets', async () => {
   assert.equal((await call('/api/chat')).status, 404); // GET is not a route
 });
 
-test('CORS allows debtcat.com only', async () => {
+test('CORS allows debtcat.com and its Firebase previews only', async () => {
   const ok = await call('/api/count', { method: 'OPTIONS', headers: { Origin: 'https://debtcat.com' } });
   assert.equal(ok.status, 204);
   assert.equal(ok.headers.get('Access-Control-Allow-Origin'), 'https://debtcat.com');
   const no = await call('/api/count', { method: 'OPTIONS', headers: { Origin: 'https://evil.example' } });
   assert.equal(no.status, 403);
+  const preview = await call('/api/scan', { method: 'OPTIONS', headers: { Origin: 'https://debtcat-e5451--pr3-abc.web.app' } });
+  assert.equal(preview.status, 204);
+  const fake = await call('/api/scan', { method: 'OPTIONS', headers: { Origin: 'https://debtcat-e5451--x.web.app.evil.example' } });
+  assert.equal(fake.status, 403);
 });
 
 test('chat drops bad history and the duplicated last message', () => {
