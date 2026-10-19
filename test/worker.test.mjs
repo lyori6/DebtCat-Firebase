@@ -5,6 +5,7 @@ import worker from '../worker/index.js';
 import { buildMessages } from '../worker/chat.js';
 import { geoapifyUrl } from '../worker/address.js';
 import { countFields, statsHtml } from '../worker/count.js';
+import { turnstileOk, makePass, passOk } from '../worker/lib/turnstile.js';
 
 const allow = { limit: async () => ({ success: true }) };
 const deny = { limit: async () => ({ success: false }) };
@@ -15,7 +16,7 @@ function env(extra = {}) {
     ASSETS: { fetch: async () => new Response('asset') },
     COUNTS: { writeDataPoint: p => points.push(p) },
     CHAT_LIMIT: allow, ADDRESS_LIMIT: allow,
-    OPENAI_API_KEY: 'k', GEOAPIFY_KEY: 'g', STATS_KEY: 'secret-key', CF_ACCOUNT_ID: 'a', CF_API_TOKEN: 't',
+    OPENAI_API_KEY: 'k', TURNSTILE_SECRET: 'ts', GEOAPIFY_KEY: 'g', STATS_KEY: 'secret-key', CF_ACCOUNT_ID: 'a', CF_API_TOKEN: 't',
     ...extra
   };
 }
@@ -87,4 +88,43 @@ test('stats needs the key', async () => {
 
 test('stats escapes page names', () => {
   assert.ok(statsHtml([{ day: '2026-10-18', page: '/<b>', real: 1, tests: 2 }]).includes('/&#60;b&#62;'));
+});
+
+test('chat needs a Turnstile token or a valid pass', async () => {
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async url => String(url).includes('siteverify')
+    ? Response.json({ success: true, hostname: 'debtcat.com' })
+    : Response.json({ choices: [{ message: { content: 'Hi there' } }] });
+  try {
+    const post = body => call('/api/chat', { method: 'POST', body: JSON.stringify(body) });
+    assert.equal((await post({ message: 'hi' })).status, 403);
+    const first = await (await post({ message: 'hi', turnstileToken: 'tok' })).json();
+    assert.equal(first.response, 'Hi there');
+    assert.ok(first.chatPass);
+    const next = await (await post({ message: 'again', chatPass: first.chatPass })).json();
+    assert.equal(next.response, 'Hi there');
+    assert.equal(next.chatPass, undefined);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test('passes expire and are tied to the secret and purpose', async () => {
+  const pass = await makePass('chat', 's');
+  assert.equal(await passOk(pass, 'chat', 's'), true);
+  assert.equal(await passOk(pass, 'chat', 'other'), false);
+  assert.equal(await passOk(pass, 'scan', 's'), false);
+  assert.equal(await passOk(pass, 'chat', 's', Date.now() + 3 * 3600 * 1000), false);
+  assert.equal(await passOk('123.abc', 'chat', 's'), false);
+});
+
+test('Turnstile check rejects other hostnames', async () => {
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async () => Response.json({ success: true, hostname: 'evil.example' });
+  try {
+    assert.equal(await turnstileOk('tok', '1.2.3.4', 'real-secret'), false);
+    assert.equal(await turnstileOk('', '1.2.3.4', 'real-secret'), false);
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });

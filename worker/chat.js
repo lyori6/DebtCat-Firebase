@@ -1,7 +1,9 @@
 // DebtChat: POST /api/chat { message, conversationHistory } -> { response }.
 // Moved from the "chatgpt-integration" Worker (workers/chatgpt-integration/worker.js). Same prompt and limits,
-// with the rate limit now shared across Cloudflare's servers (CHAT_LIMIT binding) instead of per isolate.
+// with the rate limit now shared across Cloudflare's servers (CHAT_LIMIT binding) instead of per isolate,
+// and the Turnstile check now done on the server.
 import { json, clientIp } from './lib/json.js';
+import { turnstileOk, makePass, passOk } from './lib/turnstile.js';
 
 const MODEL = 'gpt-6-luna';
 const MAX_COMPLETION_TOKENS = 800;
@@ -78,6 +80,15 @@ export async function chat(request, env) {
   const messages = buildMessages(body || {});
   if (!messages) return json({ error: 'Empty message' }, 400);
 
+  // The page sends a Turnstile token on the first message and gets a pass that covers the next 2 hours.
+  let pass = null;
+  if (!(await passOk(body.chatPass, 'chat', env.TURNSTILE_SECRET))) {
+    if (!(await turnstileOk(body.turnstileToken, clientIp(request), env.TURNSTILE_SECRET))) {
+      return json({ error: 'verify' }, 403);
+    }
+    pass = await makePass('chat', env.TURNSTILE_SECRET);
+  }
+
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${env.OPENAI_API_KEY}` },
@@ -91,5 +102,5 @@ export async function chat(request, env) {
   const data = await response.json();
   const reply = data.choices?.[0]?.message?.content;
   if (!reply || !reply.trim()) return json({ error: 'Failed to fetch response' }, 500);
-  return json({ response: reply.trim() });
+  return json(pass ? { response: reply.trim(), chatPass: pass } : { response: reply.trim() });
 }
