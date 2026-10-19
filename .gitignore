@@ -9,3 +9,4 @@ firebase-debug.log
 
 # Wrangler local state
 .wrangler/
+.dev.vars

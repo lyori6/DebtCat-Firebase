@@ -128,3 +128,53 @@ test('Turnstile check rejects other hostnames', async () => {
     globalThis.fetch = realFetch;
   }
 });
+
+import { Limits } from '../worker/lib/limits.js';
+import { clean } from '../worker/scan.js';
+
+// An in-memory stand-in for the LIMITS Durable Object binding.
+function fakeLimits() {
+  const map = new Map();
+  const storage = {
+    get: async k => map.get(k), put: async (k, v) => { map.set(k, v); },
+    deleteAll: async () => map.clear()
+  };
+  const obj = new Limits({ storage });
+  return { map, idFromName: n => n, get: () => ({ fetch: (url, init) => obj.fetch(new Request(url, init)) }) };
+}
+
+const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0, 0x10, 0x4a, 0x46, 0x49, 0x46, 0, 1, 1, 0, 0, 1]).toString('base64');
+
+test('scan checks Turnstile, then the daily caps, then reads the notice', async () => {
+  const realFetch = globalThis.fetch;
+  let pass = true;
+  globalThis.fetch = async url => String(url).includes('siteverify')
+    ? Response.json({ success: pass, hostname: 'debtcat.com' })
+    : Response.json({ choices: [{ message: { content: JSON.stringify({ isCollectionNotice: true, collectorName: { value: 'ABC LLC', sure: true }, extra: 1 }) } }] });
+  const e = env({ SCAN_LIMIT: allow, LIMITS: fakeLimits() });
+  const post = body => call('/api/scan', { method: 'POST', headers: { 'CF-Connecting-IP': '203.0.113.9' }, body: JSON.stringify(body) }, e);
+  try {
+    assert.equal((await post({ image: JPEG })).status, 400);
+    assert.equal((await post({ image: 'aGVsbG8gd29ybGQh', turnstileToken: 't' })).status, 400);
+    pass = false;
+    assert.equal((await post({ image: JPEG, turnstileToken: 't' })).status, 403);
+    assert.equal(e.LIMITS.map.size, 0); // failed checks don't use up the caps
+    pass = true;
+    const ok = await post({ image: JPEG, turnstileToken: 't' });
+    assert.equal(ok.status, 200);
+    const fields = await ok.json();
+    assert.deepEqual(fields.collectorName, { value: 'ABC LLC', sure: true });
+    assert.equal(fields.extra, undefined);
+    for (let i = 1; i < 20; i++) await post({ image: JPEG, turnstileToken: 't' });
+    assert.equal((await post({ image: JPEG, turnstileToken: 't' })).status, 429); // 21st scan from one IP
+    assert.ok([...e.LIMITS.map.keys()].every(k => !k.includes('203.0.113.9'))); // IPs are hashed
+  } finally {
+    globalThis.fetch = realFetch;
+  }
+});
+
+test('clean keeps only known fields and drops unsure blanks', () => {
+  const out = clean({ collectorName: { value: '  ', sure: true }, mentionsCourt: 'yes' });
+  assert.deepEqual(out.collectorName, { value: null, sure: false });
+  assert.equal(out.mentionsCourt, false);
+});

@@ -8,8 +8,13 @@ export async function turnstileOk(token, ip, secret) {
   form.append('secret', secret);
   form.append('response', token);
   if (ip) form.append('remoteip', ip);
-  const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body: form });
-  const data = await res.json().catch(() => ({}));
+  let data = {};
+  try {
+    const res = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body: form });
+    data = await res.json();
+  } catch {
+    return false; // Cloudflare unreachable: fail closed
+  }
   // Cloudflare's test secret (local dev only) reports a placeholder hostname, so skip that check for it.
   const testSecret = secret.startsWith('1x0000000000000000000000000000000');
   return data.success === true && (testSecret || HOSTS.includes(data.hostname));
