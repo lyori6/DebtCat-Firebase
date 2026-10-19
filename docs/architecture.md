@@ -44,9 +44,9 @@ Browser ── debtcat.com ──► one Cloudflare Worker "debtcat"
                                  ├─ GET  /stats               counts by day, real vs test (key protected)
                                  ├─ POST /api/chat            DebtChat                   → OpenAI
                                  ├─ GET  /api/address         autocomplete               → Geoapify
-                                 ├─ POST /api/letters/email   fill letter, email it      → SendGrid
+                                 ├─ POST /api/letters/email   fill letter, email it      → Resend
                                  ├─ POST /api/letters/checkout save order, Stripe session → KV, Stripe
-                                 ├─ POST /api/stripe          webhook: mail once, email  → PostGrid, SendGrid
+                                 ├─ POST /api/stripe          webhook: mail once, email  → PostGrid, Resend
                                  └─ GET  /api/letters/order   status for the thank-you page
 ```
 
@@ -65,8 +65,8 @@ Browser ── debtcat.com ──► one Cloudflare Worker "debtcat"
 |---|---|---|---|
 | Notice photo | Worker memory, one request | Gone when the request ends | OpenAI (up to 30 days unless zero data retention is approved) |
 | Letter fields while the user works | Browser sessionStorage | Cleared when the letter is done or the tab closes | Nobody |
-| Mail order (fields for one paid letter) | KV, `ORDERS` | Deleted after mailing, at most 7 days | Stripe (payment only), PostGrid (the letter), SendGrid (the copy) |
-| Emailed letter | Not stored | n/a | SendGrid |
+| Mail order (fields for one paid letter) | KV, `ORDERS` | Deleted after mailing, at most 7 days | Stripe (payment only), PostGrid (the letter), Resend (the copy) |
+| Emailed letter | Not stored | n/a | Resend |
 | Throttle and daily caps | Durable Object `LIMITS` | Hashed key and a count, reset daily | Nobody |
 | Usage counts | Workers Analytics Engine | Cloudflare's retention | Nobody. Event, page, live or preview, tester flag, day. No IP, ID or cookie (D21). |
 | Tester flag | Leo's own browsers, localStorage `dc_tester` | Until he turns it off with `?tester=off` | Nobody (D22) |
