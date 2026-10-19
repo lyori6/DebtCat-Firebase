@@ -663,6 +663,8 @@ function sanitizeResponse(response) {
         // Function to send message
         let messageCounter = 0;
         let captchaValidated = false; // Initial state: CAPTCHA not validated
+        let captchaToken = null; // Turnstile token, checked by the server on the first message
+        let chatPass = null; // Pass from the server that covers the rest of the chat
         function sendMessage() {
             const message = userInput.value.trim(); // Get the message from the input
             // Check if CAPTCHA is needed (on the first message or every 10th message)
@@ -687,10 +689,18 @@ function sanitizeResponse(response) {
         const response = await fetch(window.DC_API + '/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message, conversationHistory })
+            body: JSON.stringify({ message, conversationHistory, turnstileToken: captchaToken, chatPass })
         });
+        captchaToken = null; // A token works only once
+        if (response.status === 403) {
+            // The check expired or failed, so ask again on the next message.
+            captchaValidated = false;
+            chatPass = null;
+            messageCounter = 0;
+        }
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
+        if (data.chatPass) chatPass = data.chatPass;
         loadingElement.remove();  // Remove the loading indicator after receiving response
         // **Step 1: Sanitize the response**
         let cleanedResponse = sanitizeResponse(data.response);
@@ -740,7 +750,7 @@ function sanitizeResponse(response) {
                 // The live site key only works on debtcat.com; Cloudflare's always-pass test key is used for local previews.
                 sitekey: ['localhost', '127.0.0.1'].includes(location.hostname) ? '1x00000000000000000000AA' : '0x4AAAAAAAiA6_L9K0nk7Zwy',
                 callback: function(token) {
-                    console.log("CAPTCHA completed successfully.");
+                    captchaToken = token;
                     captchaValidated = true;
                     closeCaptchaModal();  // Close the CAPTCHA modal
                     sendMessage();  // Send the message the visitor already typed
