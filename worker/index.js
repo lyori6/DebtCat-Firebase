@@ -24,8 +24,12 @@ export const allowedOrigins = [
   'http://127.0.0.1:5050'
 ];
 
+// Firebase preview channels, so PR previews can use the API until Firebase is retired.
+// shortcut: previews share live keys and caps; give them their own Worker (D13) if previews get public traffic.
+const PREVIEW_ORIGIN = /^https:\/\/debtcat-e5451--[a-z0-9-]+\.web\.app$/;
+
 function corsHeaders(origin) {
-  if (!allowedOrigins.includes(origin)) return {};
+  if (!allowedOrigins.includes(origin) && !PREVIEW_ORIGIN.test(origin || '')) return {};
   return {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',

@@ -1,5 +1,7 @@
 // Server-side Turnstile check, plus a short-lived signed pass so one check covers a whole chat.
 const HOSTS = ['debtcat.com', 'www.debtcat.com', 'debtcat.debtcatai.workers.dev'];
+// Firebase preview channels. Turnstile only issues tokens on hostnames listed on the widget anyway.
+const PREVIEW_HOST = /^debtcat-e5451--[a-z0-9-]+\.web\.app$/;
 const PASS_SECONDS = 2 * 60 * 60;
 
 export async function turnstileOk(token, ip, secret) {
@@ -17,7 +19,7 @@ export async function turnstileOk(token, ip, secret) {
   }
   // Cloudflare's test secret (local dev only) reports a placeholder hostname, so skip that check for it.
   const testSecret = secret.startsWith('1x0000000000000000000000000000000');
-  return data.success === true && (testSecret || HOSTS.includes(data.hostname));
+  return data.success === true && (testSecret || HOSTS.includes(data.hostname) || PREVIEW_HOST.test(data.hostname || ''));
 }
 
 async function hmacKey(secret) {
