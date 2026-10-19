@@ -63,7 +63,8 @@ First deploy of the `debtcat` Worker (from a clone of this repo, logged in with 
 | A user paid but no letter arrived | Stripe payment, then PostGrid dashboard for the letter. Today this has no alert. Phase 5 adds one. |
 | Notice scan says "something went wrong" | Is the scan Worker deployed for that host? Preview pages call the preview Worker. |
 | Turnstile buttons stay grey on a preview | The preview hostname isn't listed on the Turnstile widget |
-| Chat stops answering | OpenAI key and spend limit on the chat Worker |
+| Chat stops answering | OpenAI key and spend limit on the `debtcat` Worker |
+| No real visits on /stats | Open the page with `?tester=off` if your own browser is flagged. Pages send counts from `public/js/count.js`. |
 
 ## Rename the repo to `debtcat` (D14)
 

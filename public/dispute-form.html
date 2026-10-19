@@ -23,6 +23,7 @@
   <link href="images/favicon.png" rel="shortcut icon" type="image/x-icon">
   <link href="images/webclip.png" rel="apple-touch-icon">
   <script src="/js/consent.js"></script>
+  <script src="/js/count.js"></script>
 <!--  Google tag (gtag.js) ** MOVED to site settings/integrations"
 -->
   <!--   MS Clarity   -->
@@ -638,7 +639,7 @@ function addressAutocomplete(containerElement) {
     spinnerElement.style.display = 'block';
     const promise = new Promise((resolve, reject) => {
       currentPromiseReject = reject;
-      const url = `https://address-autoc.debtcatai.workers.dev/?query=${encodeURIComponent(currentValue)}&limit=5`;
+      const url = `${window.DC_API}/api/address?query=${encodeURIComponent(currentValue)}&limit=5`;
       fetch(url, {
         method: 'GET',
         headers: {
