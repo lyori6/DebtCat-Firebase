@@ -40,7 +40,7 @@ Set with `npx wrangler secret put <NAME>` (add `--env preview` for preview). Nev
 | `STRIPE_SECRET_KEY` | letters, stripe | Stripe test key |
 | `STRIPE_WEBHOOK_SECRET` | stripe | Test-mode webhook secret |
 | `POSTGRID_API_KEY` | stripe | PostGrid test key (no real mail) |
-| `SENDGRID_API_KEY` | letters, stripe | Same account, test sender if available |
+| `RESEND_API_KEY` | letters, stripe | Same account, separate key |
 | `GEOAPIFY_KEY` | address | Same key |
 | `STATS_KEY` | /stats | Any long random string. Open `/stats?key=<it>`. |
 | `CF_ACCOUNT_ID`, `CF_API_TOKEN` | /stats | Token with only "Account Analytics: Read" |
