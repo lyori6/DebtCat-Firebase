@@ -1,0 +1,29 @@
+# One Worker serves debtcat.com: the pages in public/ and the /api/* routes in worker/.
+# See docs/architecture.md and docs/runbook.md. Secrets are set with `wrangler secret put`, never here.
+name = "debtcat"
+main = "worker/index.js"
+compatibility_date = "2026-09-01"
+workers_dev = true
+preview_urls = true
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+html_handling = "auto-trailing-slash"
+not_found_handling = "404-page"
+# Only these paths run Worker code. Every other request is a free static asset request.
+run_worker_first = ["/api/*", "/stats"]
+
+[[analytics_engine_datasets]]
+binding = "COUNTS"
+dataset = "debtcat_counts"
+
+[[ratelimits]]
+name = "CHAT_LIMIT"
+namespace_id = "2001"
+simple = { limit = 7, period = 60 }
+
+[[ratelimits]]
+name = "ADDRESS_LIMIT"
+namespace_id = "2002"
+simple = { limit = 60, period = 60 }

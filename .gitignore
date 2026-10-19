@@ -6,3 +6,6 @@ firebase-debug.log
 
 # System files
 .DS_Store
+
+# Wrangler local state
+.wrangler/

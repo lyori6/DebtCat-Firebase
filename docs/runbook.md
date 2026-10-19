@@ -8,7 +8,16 @@ Updated: 2026-10-18. How to run, deploy and roll back DebtCat. "Today" is how it
 node .claude/serve.mjs . 5050   # serves public/ at http://localhost:5050 with the firebase.json rules
 ```
 
-Tests use Node's built-in runner, no install: `node --test` (the notice scan checks are on the POC branch in `workers/notice-scan/test.mjs` until phase 3).
+The `debtcat` Worker (phase 2), pages and `/api/*` together:
+
+```
+npx wrangler dev --local --port 8787       # http://localhost:8787, secrets from .dev.vars if you add one
+node test/parity.mjs http://localhost:5050 http://localhost:8787   # same status, redirect and body per URL
+```
+
+Run `parity.mjs` against `https://debtcat.com` and the workers.dev URL before the switch (phase 4b).
+
+Tests use Node's built-in runner, no install: `npm test` (the notice scan checks are on the POC branch in `workers/notice-scan/test.mjs` until phase 3).
 
 ## Deploy
 
@@ -32,9 +41,13 @@ Set with `npx wrangler secret put <NAME>` (add `--env preview` for preview). Nev
 | `STRIPE_WEBHOOK_SECRET` | stripe | Test-mode webhook secret |
 | `POSTGRID_API_KEY` | stripe | PostGrid test key (no real mail) |
 | `SENDGRID_API_KEY` | letters, stripe | Same account, test sender if available |
-| `GEOAPIFY_API_KEY` | address | Same key |
+| `GEOAPIFY_KEY` | address | Same key |
+| `STATS_KEY` | /stats | Any long random string. Open `/stats?key=<it>`. |
+| `CF_ACCOUNT_ID`, `CF_API_TOKEN` | /stats | Token with only "Account Analytics: Read" |
 
 Today each old Worker holds its own copies. Phase 1 lists them by name.
+
+First deploy of the `debtcat` Worker (from a clone of this repo, logged in with `npx wrangler login`): `npx wrangler deploy`, then `npx wrangler secret put` for `OPENAI_API_KEY`, `GEOAPIFY_KEY`, `STATS_KEY`, `CF_ACCOUNT_ID` and `CF_API_TOKEN`. It goes live at `https://debtcat.debtcatai.workers.dev`. debtcat.com is not affected until phase 4b.
 
 ## Roll back
 
