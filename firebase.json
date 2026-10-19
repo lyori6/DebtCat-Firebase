@@ -13,7 +13,9 @@
       "header-test-white.html",
       "home-copy.html",
       "old-home.html",
-      "icon-test.html"
+      "icon-test.html",
+      "_headers",
+      "_redirects"
     ],
     "rewrites": [
       {

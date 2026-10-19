@@ -1,0 +1,11 @@
+# Files in public/ that are not served (same list as "ignore" in firebase.json).
+.*
+archive
+article-migration-script
+articles/DebtCat - Articles.csv
+s/dispute-options---test.html
+header-test.html
+header-test-white.html
+home-copy.html
+old-home.html
+icon-test.html
