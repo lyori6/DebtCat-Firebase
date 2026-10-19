@@ -15,6 +15,7 @@
   <link href="/images/favicon.png" rel="shortcut icon" type="image/x-icon">
   <link href="/images/webclip.png" rel="apple-touch-icon">
   <script src="/js/consent.js"></script>
+  <script src="/js/count.js"></script>
   <script src="/js/qrcode.js"></script>
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
 </head>
@@ -99,6 +100,7 @@
             <span data-msg="bad_type">We can only read JPEG, PNG or WebP photos. Try another photo.</span>
             <span data-msg="too_large">That photo is too big. Try another photo.</span>
             <span data-msg="rate_limited">Too many scans in a short time. Please wait a minute, then try again.</span>
+            <span data-msg="daily_limit">We've reached today's limit for reading photos. Please try again tomorrow, or type your details in instead.</span>
             <span data-msg="turnstile">The security check didn't go through. Please try again.</span>
             <span data-msg="other">Something went wrong while reading your notice. Please try again, or type your details in instead.</span>
           </div>
@@ -258,7 +260,7 @@
         const host = location.hostname;
         const local = host === 'localhost' || host === '127.0.0.1';
         const live = host === 'debtcat.com' || host === 'www.debtcat.com';
-        const WORKER_URL = live ? 'https://notice-scan.debtcatai.workers.dev/' : 'https://notice-scan-preview.debtcatai.workers.dev/';
+        const SCAN_URL = window.DC_API + '/api/scan';
         const SITEKEY = local ? '1x00000000000000000000AA' : '0x4AAAAAAAiA6_L9K0nk7Zwy';
 
         const inputs = [document.getElementById('photo'), document.getElementById('camera')];
@@ -347,7 +349,7 @@
           }
           let res, data;
           try {
-            res = await fetch(WORKER_URL, {
+            res = await fetch(SCAN_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ image, turnstileToken: sentToken })
