@@ -23,6 +23,7 @@
   <link href="images/favicon.png" rel="shortcut icon" type="image/x-icon">
   <link href="images/webclip.png" rel="apple-touch-icon">
   <script src="/js/consent.js" data-taboola-pixel></script>
+  <script src="/js/count.js"></script>
 <!--  Google tag (gtag.js) ** MOVED to site settings/integrations"
 -->
   <!--   MS Clarity   -->
@@ -561,35 +562,11 @@ body, html {
           <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
           <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async="" defer=""></script>
           <script>
-    // Function to get user's IP address
-    async function getUserIP() {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        return data.ip;
-    }
 // Function to sanitize the AI's response by removing any HTML tags
 function sanitizeResponse(response) {
     // Remove any HTML tags and their contents
     return response.replace(/<[^>]*>?/gm, '');
 }
-    // Function to log page visit
-    async function logPageVisit() {
-        const timestamp = new Date().toISOString();
-        const ip = await getUserIP();
-        const userAgent = navigator.userAgent;
-        const payload = {
-            timestamp: timestamp,
-            ip: ip,
-            userAgent: userAgent,
-            email: ''  // No email on landing, so leave blank
-        };
-        // Send the data to the Worker
-        fetch('https://glog-cht-eml.debtcatai.workers.dev/', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-    }
     // Function to validate the email form
     function validateForm() {
         const email = document.getElementById('email-address').value.trim();
@@ -609,12 +586,6 @@ function sanitizeResponse(response) {
     };
     // Call the function when the DOM is fully loaded
     document.addEventListener('DOMContentLoaded', function() {
-        // Visit logging is optional analytics, so it only runs after cookie consent.
-        if (window.dcConsent && window.dcConsent.analyticsAllowed()) {
-            logPageVisit();
-        } else {
-            document.addEventListener('dc:analytics-consent', logPageVisit, { once: true });
-        }
         const chatMessages = document.getElementById('chat-messages');
         const userInput = document.getElementById('user-input');
         const sendButton = document.getElementById('send-button');
@@ -692,6 +663,8 @@ function sanitizeResponse(response) {
         // Function to send message
         let messageCounter = 0;
         let captchaValidated = false; // Initial state: CAPTCHA not validated
+        let captchaToken = null; // Turnstile token, checked by the server on the first message
+        let chatPass = null; // Pass from the server that covers the rest of the chat
         function sendMessage() {
             const message = userInput.value.trim(); // Get the message from the input
             // Check if CAPTCHA is needed (on the first message or every 10th message)
@@ -713,13 +686,21 @@ function sanitizeResponse(response) {
         async function sendToAI(message) {
     const loadingElement = displayLoading();  // Show loading indicator while AI processes the request
     try {
-        const response = await fetch('https://chatgpt-integration.debtcatai.workers.dev', {
+        const response = await fetch(window.DC_API + '/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message, conversationHistory })
+            body: JSON.stringify({ message, conversationHistory, turnstileToken: captchaToken, chatPass })
         });
+        captchaToken = null; // A token works only once
+        if (response.status === 403) {
+            // The check expired or failed, so ask again on the next message.
+            captchaValidated = false;
+            chatPass = null;
+            messageCounter = 0;
+        }
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         const data = await response.json();
+        if (data.chatPass) chatPass = data.chatPass;
         loadingElement.remove();  // Remove the loading indicator after receiving response
         // **Step 1: Sanitize the response**
         let cleanedResponse = sanitizeResponse(data.response);
@@ -769,7 +750,7 @@ function sanitizeResponse(response) {
                 // The live site key only works on debtcat.com; Cloudflare's always-pass test key is used for local previews.
                 sitekey: ['localhost', '127.0.0.1'].includes(location.hostname) ? '1x00000000000000000000AA' : '0x4AAAAAAAiA6_L9K0nk7Zwy',
                 callback: function(token) {
-                    console.log("CAPTCHA completed successfully.");
+                    captchaToken = token;
                     captchaValidated = true;
                     closeCaptchaModal();  // Close the CAPTCHA modal
                     sendMessage();  // Send the message the visitor already typed
@@ -866,10 +847,6 @@ function sanitizeResponse(response) {
             downloadModal.style.display = 'none';
             // Show the loading modal while the email is being processed
             loadingModal.style.display = 'flex';
-            // Prepare timestamp, user agent, and IP for logging
-            const timestamp = new Date().toISOString();
-            const userAgent = navigator.userAgent;
-            const ip = await getUserIP();
             // Prepare the chat log
             const messages = Array.from(document.querySelectorAll('.message-container'));
             // Construct the chat log content
@@ -891,13 +868,6 @@ function sanitizeResponse(response) {
                 content: emailContent, // Send the chat log content with disclaimer
                 isHTML: true // Indicate that the email content is HTML
             };
-            // Prepare the log payload
-            const logPayload = {
-                email: email,
-                timestamp: timestamp,
-                ip: ip,
-                userAgent: userAgent
-            };
             try {
                 // Send email via your email service (ensure it supports HTML content)
                 const emailResponse = await fetch('https://sendgrid.debtcatai.workers.dev/', {
@@ -906,12 +876,6 @@ function sanitizeResponse(response) {
                     body: JSON.stringify(emailPayload)
                 });
                 if (emailResponse.ok) {
-                    // Log the email and event
-                    await fetch('https://glog-cht-eml.debtcatai.workers.dev/', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(logPayload)
-                    });
                     // Hide loading modal once email is successfully sent
                     loadingModal.style.display = 'none';
                     window.location.href = '/ty-chat'; // Redirect to the thank-you page

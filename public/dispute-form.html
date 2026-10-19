@@ -23,6 +23,7 @@
   <link href="images/favicon.png" rel="shortcut icon" type="image/x-icon">
   <link href="images/webclip.png" rel="apple-touch-icon">
   <script src="/js/consent.js"></script>
+  <script src="/js/count.js"></script>
 <!--  Google tag (gtag.js) ** MOVED to site settings/integrations"
 -->
   <!--   MS Clarity   -->
@@ -611,37 +612,11 @@ document.addEventListener('DOMContentLoaded', function () {
       accountNumber: document.getElementById('formAccountNumber').value.trim(),
       collectorName: document.getElementById('formCollectorName').value.trim(),
       reasonForDispute: document.getElementById('formReasonForDispute').value,
-      disputeNote: document.getElementById('formNote').value.trim() || " ",
-      token: Date.now().toString(),
-      timestamp: new Date().toISOString(),
-      userAgent: localStorage.getItem('userAgent'),
-      ipAddress: localStorage.getItem('ipAddress')
+      disputeNote: document.getElementById('formNote').value.trim() || " "
     };
     // Store submittedData in local storage
     localStorage.setItem('submittedData', JSON.stringify(submittedData));
-    // Log submitted data before sending
-    console.log('Form submission data:', submittedData);
-    // Send the submitted data to Cloudflare Worker
-    try {
-      const response = await fetch('https://glog-dspt-ml-forms.debtcatai.workers.dev/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(submittedData)
-      });
-      const result = await response.json();
-      if (result.status === 'success') {
-        window.location.href = 'dispute-options.html';
-      } else {
-        throw new Error('Submission failed');
-      }
-    } catch (error) {
-      document.getElementById('loadingIndicatorSubmit').style.display = 'none';
-      document.getElementById('errorMessage').style.display = 'block';
-      submitButton.style.display = 'block';
-      // Re-enable the submit button for retry
-      toggleSubmitButton();
-      console.error('Error:', error);
-    }
+    window.location.href = 'dispute-options.html';
   });
 });
 // Address Autocomplete Function (Unchanged)
@@ -664,7 +639,7 @@ function addressAutocomplete(containerElement) {
     spinnerElement.style.display = 'block';
     const promise = new Promise((resolve, reject) => {
       currentPromiseReject = reject;
-      const url = `https://address-autoc.debtcatai.workers.dev/?query=${encodeURIComponent(currentValue)}&limit=5`;
+      const url = `${window.DC_API}/api/address?query=${encodeURIComponent(currentValue)}&limit=5`;
       fetch(url, {
         method: 'GET',
         headers: {
@@ -687,7 +662,6 @@ function addressAutocomplete(containerElement) {
     });
     promise.then((data) => {
       spinnerElement.style.display = 'none';
-      console.log('API Response:', data);
       const autocompleteItemsElement = document.createElement("div");
       autocompleteItemsElement.setAttribute("class", "autocomplete-items");
       containerElement.appendChild(autocompleteItemsElement);
@@ -835,20 +809,9 @@ document.addEventListener("DOMContentLoaded", async function() {
   if (autocompleteContainer) {
     addressAutocomplete(autocompleteContainer);
   }
-  // Fetch IP address upon landing
-  let ipAddress = '';
-  try {
-    const ipResponse = await fetch('https://api.ipify.org?format=json');
-    const ipData = await ipResponse.json();
-    ipAddress = ipData.ip;
-    // Store IP address in local storage
-    localStorage.setItem('ipAddress', ipAddress);
-  } catch (error) {
-    console.error("Failed to fetch IP address:", error);
-  }
-  // Store User-Agent in local storage
-  const userAgent = navigator.userAgent || navigator.userAgentData;
-  localStorage.setItem('userAgent', userAgent);
+  // Clear values older versions of this page saved
+  localStorage.removeItem('ipAddress');
+  localStorage.removeItem('userAgent');
 });
 </script>
         </div>

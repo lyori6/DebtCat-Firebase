@@ -1,0 +1,13 @@
+# Replaces the redirects in firebase.json.
+/tos /s/tos 301
+/privacy-policy /s/privacy-policy 301
+/refund /s/refund 301
+/about /s/about 301
+/fdcpa-checklist /s/fdcpa-checklist 301
+/dispute /start-dispute 301
+/articles/what-is-debt-consolidation /articles/debt-consolidation-secrets-they-don-t-want-you-to-know 301
+/articles/what-happens-if-you-ignore-debt /articles/what-really-happens-when-you-ignore-debt 301
+/articles/how-can-i-negotiate-with-a-debt-collector /articles/debt-negotiation-an-insider-s-guide-to-dealing-with-collectors 301
+/articles/dispute-options-collectors-vs-credit-bureaus /articles/debt-collector-vs-credit-bureau-disputes-understanding-the-difference 301
+/articles/statute-of-limitations /articles/old-debt-calls-how-the-statute-of-limitations-protects-you 301
+/articles/fdcpa-and-cfpb /articles/debt-collectors-beware-how-the-fdcpa-and-cfpb-protect-your-wallet 301

@@ -7,5 +7,7 @@ firebase-debug.log
 # System files
 .DS_Store
 
+# Wrangler local state
+.wrangler/
 # Local Worker secrets (wrangler)
 .dev.vars
