@@ -1,5 +1,5 @@
 // Exact daily counters in one Durable Object (D9). Each entry is a hashed key and a count, reset each UTC day.
-// The scan caps use it now; the letter throttle will too.
+// Used by the scan caps and the letter throttle.
 
 export class Limits {
   constructor(state) {

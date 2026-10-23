@@ -37,10 +37,11 @@ Set with `npx wrangler secret put <NAME>` (add `--env preview` for preview). Nev
 |---|---|---|
 | `OPENAI_API_KEY` | scan, chat | Separate OpenAI project with its own spend limit |
 | `TURNSTILE_SECRET` | scan, chat, letters | Separate widget that lists preview hosts and localhost |
-| `STRIPE_SECRET_KEY` | letters, stripe | Stripe test key |
+| `STRIPE_SECRET_KEY` | letters, stripe | Stripe test key. Live: a restricted key with only Checkout Sessions: Write. |
 | `STRIPE_WEBHOOK_SECRET` | stripe | Test-mode webhook secret |
 | `POSTGRID_API_KEY` | stripe | PostGrid test key (no real mail) |
 | `RESEND_API_KEY` | letters, stripe | Same account, separate key |
+| `ALERT_EMAIL` | stripe | Where "a paid letter needs a look" emails go. A secret only to keep the address out of this public repo. |
 | `GEOAPIFY_KEY` | address | Same key |
 | `STATS_KEY` | /stats | Any long random string. Open `/stats?key=<it>`. |
 | `CF_ACCOUNT_ID`, `CF_API_TOKEN` | /stats | Token with only "Account Analytics: Read" |
@@ -48,6 +49,18 @@ Set with `npx wrangler secret put <NAME>` (add `--env preview` for preview). Nev
 Today each old Worker holds its own copies. Phase 1 lists them by name.
 
 First deploy of the `debtcat` Worker (from a clone of this repo, logged in with `npx wrangler login`): `npx wrangler deploy`, then `npx wrangler secret put` for `OPENAI_API_KEY`, `GEOAPIFY_KEY`, `STATS_KEY`, `CF_ACCOUNT_ID` and `CF_API_TOKEN`. It goes live at `https://debtcat.debtcatai.workers.dev`. debtcat.com is not affected until phase 4b.
+
+## Letters setup (phase 5)
+
+Run on the Mac, in the repo clone. Test mode first: no charge, no real mail. Nothing changes on debtcat.com, because its pages only switch to the new routes in a later PR.
+
+1. `git pull`
+2. Log in to the DebtCat Cloudflare account: `npx wrangler logout`, then `npx wrangler login`, then `npx wrangler whoami` must show the debtcatai account.
+3. `npx wrangler deploy`. This adds the `Order` Durable Object (migration v2).
+4. Stripe, in test mode: Developers, Webhooks, Add endpoint `https://debtcat.debtcatai.workers.dev/api/stripe`, event `checkout.session.completed`. Copy its signing secret.
+5. `npx wrangler secret put` for each, pasting the value when asked: `STRIPE_SECRET_KEY` (test key), `STRIPE_WEBHOOK_SECRET` (step 4), `POSTGRID_API_KEY` (PostGrid test key), `RESEND_API_KEY`, `ALERT_EMAIL`.
+6. Test on the preview of the pages PR with Stripe's test card 4242 4242 4242 4242. The letter shows in PostGrid's test dashboard and the copy arrives by email.
+7. Go live: repeat steps 4 and 5 in Stripe live mode with a restricted live key (Checkout Sessions: Write) and the new live PostGrid key. Then merge the pages PR.
 
 ## Roll back
 
@@ -60,7 +73,7 @@ First deploy of the `debtcat` Worker (from a clone of this repo, logged in with 
 
 | Symptom | First check |
 |---|---|
-| A user paid but no letter arrived | Stripe payment, then PostGrid dashboard for the letter. Today this has no alert. Phase 5 adds one. |
+| A user paid but no letter arrived | The alert email names the order id. Check Stripe (Developers, Webhooks, failed deliveries), then the PostGrid dashboard (search the order id in the description). Stripe retries a failed delivery for 3 days. |
 | Notice scan says "something went wrong" | Is the scan Worker deployed for that host? Preview pages call the preview Worker. |
 | Turnstile buttons stay grey on a preview | The preview hostname isn't listed on the Turnstile widget |
 | Chat stops answering | OpenAI key and spend limit on the `debtcat` Worker |
