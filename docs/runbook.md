@@ -59,7 +59,7 @@ Run on the Mac, in the repo clone. Test mode first: no charge, no real mail. Not
 3. `npx wrangler deploy`. This adds the `Order` Durable Object (migration v2).
 4. Stripe, in test mode: Developers, Webhooks, Add endpoint `https://debtcat.debtcatai.workers.dev/api/stripe`, event `checkout.session.completed`. Copy its signing secret.
 5. `npx wrangler secret put` for each, pasting the value when asked: `STRIPE_SECRET_KEY` (test key), `STRIPE_WEBHOOK_SECRET` (step 4), `POSTGRID_API_KEY` (PostGrid test key), `RESEND_API_KEY`, `ALERT_EMAIL`.
-6. Test on the preview of the pages PR with Stripe's test card 4242 4242 4242 4242. The letter shows in PostGrid's test dashboard and the copy arrives by email.
+6. Test on the Worker's own address, which serves the pages from your checkout: `git checkout claude/project-thread-xllh0a`, `npx wrangler deploy`, then open `https://debtcat.debtcatai.workers.dev/dispute-form.html`. If the security check stays grey, add `debtcat.debtcatai.workers.dev` to the Turnstile widget's hostnames in the Cloudflare dashboard. Pay with Stripe's test card 4242 4242 4242 4242. The letter shows in PostGrid's test dashboard and the copy arrives by email. Also try Email myself and Download PDF. Then `git checkout main`.
 7. Go live: repeat steps 4 and 5 in Stripe live mode with a restricted live key (Checkout Sessions: Write) and the new live PostGrid key. Then merge the pages PR.
 
 ## Roll back
