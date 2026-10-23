@@ -1,0 +1,58 @@
+{
+  "isCollectionNotice": true,
+  "collectorName": {
+    "value": "Placeholder Portfolio Partners"
+  },
+  "collectorAddress": {
+    "value": "9 Demo Street"
+  },
+  "collectorCity": {
+    "value": "Lakeview"
+  },
+  "collectorState": {
+    "value": "OH"
+  },
+  "collectorZip": {
+    "value": "43331"
+  },
+  "currentCreditor": {
+    "value": "Northwind Funding LLC"
+  },
+  "originalCreditor": {
+    "value": "Contoso Retail Bank"
+  },
+  "accountNumber": {
+    "value": "XXXX-XXXX-8812"
+  },
+  "itemizationDate": {
+    "value": "2025-12-31"
+  },
+  "amountOnItemizationDate": {
+    "value": "987.10"
+  },
+  "currentAmount": {
+    "value": "987.10"
+  },
+  "noticeDate": {
+    "value": "2026-09-22"
+  },
+  "respondByDate": {
+    "value": "2026-10-30"
+  },
+  "consumerName": {
+    "value": "Riley Q. Sample"
+  },
+  "consumerAddress": {
+    "value": "780 Mockingbird Court, Apt 3B"
+  },
+  "consumerCity": {
+    "value": "Fairhaven"
+  },
+  "consumerState": {
+    "value": "MA"
+  },
+  "consumerZip": {
+    "value": "02719"
+  },
+  "mentionsCourt": false
+}

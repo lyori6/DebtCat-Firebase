@@ -1,0 +1,22 @@
+# Deploys each pull request to its own Firebase preview channel and comments the link on the PR.
+# Same action as firebase-hosting-merge.yml, without channelId: live, so debtcat.com is not touched.
+name: Deploy to Firebase Hosting preview on PR
+on: pull_request
+permissions:
+  checks: write
+  contents: read
+  pull-requests: write
+jobs:
+  build_and_preview:
+    # Forks don't get the deploy secret.
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: npm ci && npm run build
+      - uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DEBTCAT_E5451 }}
+          projectId: debtcat-e5451
+          expires: 30d

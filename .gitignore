@@ -9,4 +9,5 @@ firebase-debug.log
 
 # Wrangler local state
 .wrangler/
+# Local Worker secrets (wrangler)
 .dev.vars

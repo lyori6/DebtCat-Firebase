@@ -1,0 +1,58 @@
+{
+  "isCollectionNotice": true,
+  "collectorName": {
+    "value": "Test Credit Collections Inc"
+  },
+  "collectorAddress": {
+    "value": "PO Box 5550"
+  },
+  "collectorCity": {
+    "value": "Mesa Verde"
+  },
+  "collectorState": {
+    "value": "AZ"
+  },
+  "collectorZip": {
+    "value": "85001"
+  },
+  "currentCreditor": {
+    "value": "Acme Medical Group"
+  },
+  "originalCreditor": {
+    "value": null
+  },
+  "accountNumber": {
+    "value": "MED-0099-3321"
+  },
+  "itemizationDate": {
+    "value": "2026-07-01"
+  },
+  "amountOnItemizationDate": {
+    "value": "412.00"
+  },
+  "currentAmount": {
+    "value": "327.00"
+  },
+  "noticeDate": {
+    "value": "2026-10-05"
+  },
+  "respondByDate": {
+    "value": "2026-11-14"
+  },
+  "consumerName": {
+    "value": "Casey Exampleton"
+  },
+  "consumerAddress": {
+    "value": "15 Sample Road"
+  },
+  "consumerCity": {
+    "value": "Dover"
+  },
+  "consumerState": {
+    "value": "DE"
+  },
+  "consumerZip": {
+    "value": "19901"
+  },
+  "mentionsCourt": true
+}

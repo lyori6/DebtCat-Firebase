@@ -1,0 +1,31 @@
+# Deploy the preview Worker: npx wrangler deploy --env preview
+# Deploy the live Worker (after the lawyer review): npx wrangler deploy
+# Secrets, set once per Worker: npx wrangler secret put OPENAI_API_KEY [--env preview]
+#                               npx wrangler secret put TURNSTILE_SECRET [--env preview]
+name = "notice-scan"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+
+# No logs of any kind. The Worker must not keep any notice data.
+[observability]
+enabled = false
+
+# 5 scans a minute per IP.
+[[ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1001"
+simple = { limit = 5, period = 60 }
+
+[env.preview]
+name = "notice-scan-preview"
+workers_dev = true
+vars = { ALLOW_PREVIEW = "true" }
+
+[env.preview.observability]
+enabled = false
+
+[[env.preview.ratelimits]]
+name = "RATE_LIMITER"
+namespace_id = "1002"
+simple = { limit = 5, period = 60 }
