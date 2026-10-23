@@ -45,7 +45,7 @@ Browser ── debtcat.com ──► one Cloudflare Worker "debtcat"
                                  ├─ POST /api/chat            DebtChat                   → OpenAI
                                  ├─ GET  /api/address         autocomplete               → Geoapify
                                  ├─ POST /api/letters/email   fill letter, email it      → Resend
-                                 ├─ POST /api/letters/checkout save order, Stripe session → KV, Stripe
+                                 ├─ POST /api/letters/checkout save order, Stripe session → Order DO, Stripe
                                  ├─ POST /api/stripe          webhook: mail once, email  → PostGrid, Resend
                                  └─ GET  /api/letters/order   status for the thank-you page
 ```
@@ -65,7 +65,7 @@ Browser ── debtcat.com ──► one Cloudflare Worker "debtcat"
 |---|---|---|---|
 | Notice photo | Worker memory, one request | Gone when the request ends | OpenAI (up to 30 days unless zero data retention is approved) |
 | Letter fields while the user works | Browser sessionStorage | Cleared when the letter is done or the tab closes | Nobody |
-| Mail order (fields for one paid letter) | KV, `ORDERS` | Deleted after mailing, at most 7 days | Stripe (payment only), PostGrid (the letter), Resend (the copy) |
+| Mail order (fields for one paid letter) | Durable Object `Order`, one per order (D26) | Letter fields deleted right after mailing; the status row after 7 days | Stripe (payment only), PostGrid (the letter), Resend (the copy) |
 | Emailed letter | Not stored | n/a | Resend |
 | Throttle and daily caps | Durable Object `LIMITS` | Hashed key and a count, reset daily | Nobody |
 | Usage counts | Workers Analytics Engine | Cloudflare's retention | Nobody. Event, page, live or preview, tester flag, day. No IP, ID or cookie (D21). |
@@ -83,7 +83,7 @@ debtcat/                       renamed from DebtCat-Firebase
 │  └─ js/letter.js             the one dispute letter template, used by the page and the Worker
 ├─ worker/
 │  ├─ index.js                 routes /api/* to the files below, everything else to public/
-│  ├─ scan.js  count.js  chat.js  address.js  letters.js  stripe.js
+│  ├─ scan.js  count.js  chat.js  address.js  letters.js (email, checkout, order status, Stripe webhook)
 │  └─ lib/                     turnstile.js, limits.js (Durable Object), json.js
 ├─ test/                       node --test checks and synthetic fixtures
 ├─ wrangler.toml               one Worker; envs: preview and production
@@ -99,12 +99,12 @@ debtcat/                       renamed from DebtCat-Firebase
 |---|---|---|
 | Pages | Workers static assets | `/about` serves `about.html` and `/about.html` redirects to `/about`, same as Firebase `cleanUrls` |
 | Backend | The same Worker | One deploy, one set of secrets, no CORS |
-| Orders | Workers KV with a 7-day expiry | Built-in expiry. Order ids are random and written once. |
+| Orders | One SQLite Durable Object per order, deleted by an alarm after 7 days (D26) | Mail-once needs an exact claim; KV is not exact. No namespace to create. |
 | Throttle and caps | One Durable Object class | A hard cap needs an exact shared counter. KV is not exact. |
 | Burst limit | Workers rate limiting binding | Already used by the scan Worker |
 | Bot check | Turnstile, checked on the server | Already used. Check `hostname` and `action` too. |
 | Counts | Workers Analytics Engine | No cookies, no personal data |
-| Stripe | The `stripe` npm package (already used by the old Workers) | Webhook signature checks should not be hand-written |
+| Stripe | Plain `fetch` plus `crypto.subtle` for the webhook signature (D25) | Two calls total; no dependency or build step. Tested against Stripe's documented signing scheme. |
 | PDF | jsPDF in the browser for downloads. In the Worker only if a test shows it fits the free plan's 10 ms CPU limit. | Otherwise PostGrid renders the mailed letter from its HTML template, and the email copy is HTML (D18). |
 | Previews | Workers Builds preview URLs per PR | Replaces Firebase preview channels |
 | DNS | Cloudflare DNS, free plan. Domain stays registered at Porkbun. | Workers can only serve a domain on Cloudflare DNS (D19) |

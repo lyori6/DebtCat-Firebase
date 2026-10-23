@@ -4,32 +4,27 @@ import { chat } from './chat.js';
 import { address } from './address.js';
 import { count, stats } from './count.js';
 import { scan } from './scan.js';
+import { emailLetter, checkout, orderStatus, stripeWebhook } from './letters.js';
 import { json } from './lib/json.js';
+import { isAllowedOrigin } from './lib/origins.js';
 
 export { Limits } from './lib/limits.js';
+export { Order } from './lib/order.js';
 
 const routes = {
   'POST /api/chat': chat,
   'GET /api/address': address,
   'POST /api/count': count,
   'POST /api/scan': scan,
+  'POST /api/letters/email': emailLetter,
+  'POST /api/letters/checkout': checkout,
+  'GET /api/letters/order': orderStatus,
+  'POST /api/stripe': stripeWebhook,
   'GET /stats': stats
 };
 
-// Until debtcat.com moves to this Worker (phase 4b), its pages on Firebase call this Worker cross-origin.
-export const allowedOrigins = [
-  'https://debtcat.com',
-  'https://www.debtcat.com',
-  'http://localhost:5050',
-  'http://127.0.0.1:5050'
-];
-
-// Firebase preview channels, so PR previews can use the API until Firebase is retired.
-// shortcut: previews share live keys and caps; give them their own Worker (D13) if previews get public traffic.
-const PREVIEW_ORIGIN = /^https:\/\/debtcat-e5451--[a-z0-9-]+\.web\.app$/;
-
 function corsHeaders(origin) {
-  if (!allowedOrigins.includes(origin) && !PREVIEW_ORIGIN.test(origin || '')) return {};
+  if (!isAllowedOrigin(origin)) return {};
   return {
     'Access-Control-Allow-Origin': origin,
     'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',

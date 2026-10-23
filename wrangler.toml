@@ -37,7 +37,7 @@ name = "SCAN_LIMIT"
 namespace_id = "2003"
 simple = { limit = 5, period = 60 }
 
-# Daily caps (scans now, letters later). SQLite-backed, which the free plan includes.
+# Daily caps for scans and letters. SQLite-backed, which the free plan includes.
 [[durable_objects.bindings]]
 name = "LIMITS"
 class_name = "Limits"
@@ -45,3 +45,18 @@ class_name = "Limits"
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["Limits"]
+
+[[ratelimits]]
+name = "LETTER_LIMIT"
+namespace_id = "2004"
+simple = { limit = 5, period = 60 }
+
+# One Durable Object per mail order (D26): holds the letter between checkout and the Stripe webhook,
+# mails it once, and deletes itself.
+[[durable_objects.bindings]]
+name = "ORDERS"
+class_name = "Order"
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["Order"]
