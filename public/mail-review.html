@@ -20,6 +20,7 @@
   <link href="images/webclip.png" rel="apple-touch-icon">
   <script src="/js/consent.js"></script>
   <script src="/js/count.js"></script>
+  <script>try { localStorage.removeItem('submittedData'); } catch (e) {}</script>
 <!--  Google tag (gtag.js) ** MOVED to site settings/integrations"
 -->
   <!--   MS Clarity   -->
@@ -381,7 +382,6 @@
     color: #555; /* Adjust the color to match the rest of the typography */
 }
 </style>
-          <script src="https://js.stripe.com/v3/"></script>
         </head>
         <body>
           <div class="container">
@@ -456,8 +456,9 @@
             <div class="disclaimer">
               Your dispute letter will be printed and mailed within two business days.<br> Delivery times are determined by USPS. See our <a href="s/refund.html" target="_blank">refund policy</a>
             </div>
+            <div id="captchaContainer" style="display: flex; justify-content: center; margin-bottom: 12px;"></div>
             <div class="button-wrapper">
-              <button id="confirmSubmit">Confirm and Pay $3.99</button> <!--  This will be dynamically updated  -->
+              <button id="confirmSubmit" disabled>Confirm and Pay $3.99</button> <!--  This will be dynamically updated  -->
               <button id="backButton">Back</button>
               <button id="startOverButton" class="start-over-btn">Start Over</button>
             </div>
@@ -466,10 +467,31 @@
           </div>
           <script>
         document.addEventListener("DOMContentLoaded", function() {
-            // Initialize Stripe with your publishable key
-            const stripe = Stripe('pk_live_51PUHRJBcUICL2kM7RIBtle0vuYBrBuaLLTTqmPaLA3TLVL2937Ao3Ko9isfvmgXzGzjVbeKvVqq2eiSGLdNj7Ufu00q8HFeS6Z');
-            // Retrieve stored data from localStorage
-            let storedData = JSON.parse(localStorage.getItem('submittedData') || '{}');
+            // Retrieve stored data for this tab
+            let storedData = {};
+            try { storedData = JSON.parse(sessionStorage.getItem('submittedData') || '{}') || {}; } catch (e) {}
+            const TURNSTILE_SITEKEY = ['localhost', '127.0.0.1'].includes(location.hostname) ? '1x00000000000000000000AA' : '0x4AAAAAAAiA6_L9K0nk7Zwy';
+            let captchaWidgetId = null;
+            let captchaToken = '';
+            const payButton = document.getElementById('confirmSubmit');
+            function updatePayButton() { payButton.disabled = !captchaToken; }
+            function renderCaptcha() {
+                if (typeof turnstile === 'undefined') { setTimeout(renderCaptcha, 300); return; }
+                captchaWidgetId = turnstile.render('#captchaContainer', {
+                    sitekey: TURNSTILE_SITEKEY,
+                    callback: (token) => { captchaToken = token; updatePayButton(); },
+                    'expired-callback': () => { captchaToken = ''; updatePayButton(); },
+                    'error-callback': () => { captchaToken = ''; updatePayButton(); }
+                });
+            }
+            (function loadTurnstile() {
+                const script = document.createElement('script');
+                script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+                script.async = true;
+                script.defer = true;
+                script.onload = renderCaptcha;
+                document.body.appendChild(script);
+            })();
             let isEditingMyInfo = false;
             let isEditingAccountInfo = false;
             // Function to validate email
@@ -555,7 +577,7 @@
                     // Default to first_class if not certified
                     confirmButton.textContent = 'Confirm and Pay $3.99';
                     storedData.letterType = 'first_class'; // Ensure it's set to first_class
-                    localStorage.setItem('submittedData', JSON.stringify(storedData));
+                    try { sessionStorage.setItem('submittedData', JSON.stringify(storedData)); } catch (e) {}
                 }
             }
             // Handle 'Edit/Save' for My Information
@@ -579,7 +601,7 @@
                         emailError.style.display = 'none';
                     }
                     storedData.email = emailValue;
-                    localStorage.setItem('submittedData', JSON.stringify(storedData));
+                    try { sessionStorage.setItem('submittedData', JSON.stringify(storedData)); } catch (e) {}
                     document.getElementById('myInfoNameDisplay').innerText = nameValue;
                     document.getElementById('myInfoEmailDisplay').innerText = storedData.email;
                 } else {
@@ -609,7 +631,7 @@
                     storedData.disputeNote = document.getElementById('disputeNoteInput').value.trim();
                     storedData.collectorName = document.getElementById('collectorNameInput').value.trim();
                     storedData.accountNumber = document.getElementById('accountNumberInput').value.trim();
-                    localStorage.setItem('submittedData', JSON.stringify(storedData));
+                    try { sessionStorage.setItem('submittedData', JSON.stringify(storedData)); } catch (e) {}
                     document.getElementById('balanceDisplay').innerText = formatBalance(storedData.balance);
                     document.getElementById('disputeReasonDisplay').innerText = storedData.reasonForDispute;
                     document.getElementById('disputeNoteDisplay').innerText = storedData.disputeNote;
@@ -649,46 +671,54 @@
                 document.getElementById('backButton').style.display = 'none';
                 document.getElementById('confirmSubmitSpinner').style.display = 'block';
                 document.getElementById('errorMessage').style.display = 'none';
+                let message = '';
+                let redirecting = false;
                 try {
-                    // Dynamically set the Stripe worker URL based on the letterType
-                    const workerURL = 'https://stripepmnt.debtcatai.workers.dev/'; // New Stripe Worker URL
-                    // Prepare the payload with letterType
-                    const payload = {
-                        letterType: storedData.letterType || 'first_class' // Default to 'first_class' if not set
-                    };
-                    const response = await fetch(workerURL, {
+                    const keys = ['firstName', 'lastName', 'email', 'address', 'city', 'state', 'zip', 'accountNumber', 'balance', 'collectorName', 'collectorAddress', 'collectorAddress2', 'collectorCity', 'collectorState', 'collectorZip', 'reasonForDispute', 'disputeNote'];
+                    const fields = {};
+                    keys.forEach(k => { if (storedData[k] !== undefined) fields[k] = storedData[k]; });
+                    const response = await fetch(`${window.DC_API}/api/letters/checkout`, {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(payload)
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            fields,
+                            mailingClass: storedData.letterType === 'certified' ? 'certified' : 'first_class',
+                            turnstileToken: captchaToken
+                        })
                     });
-                    if (!response.ok) {
-                        const errorText = await response.text();
-                        throw new Error(`Stripe Worker Error: ${errorText}`);
+                    let data = {};
+                    try { data = await response.json(); } catch (e) {}
+                    if (response.ok && data.url) {
+                        redirecting = true;
+                        window.location.href = data.url;
+                        return;
                     }
-                    const session = await response.json();
-                    if (!session || session.error || !session.id) {
-                        throw new Error(session.error || 'Failed to create Stripe session');
-                    }
-                    // Redirect to Stripe Checkout
-                    const result = await stripe.redirectToCheckout({
-                        sessionId: session.id
-                    });
-                    if (result.error) {
-                        throw new Error(result.error.message);
+                    if (response.status === 403) {
+                        message = "The security check didn't go through. Please try again.";
+                    } else if (response.status === 429) {
+                        message = data.error === 'daily_limit'
+                            ? "You've reached today's limit for letters. Please try again tomorrow."
+                            : 'Too many tries in a short time. Please wait a minute.';
+                    } else if (response.status === 400) {
+                        message = 'Please check your details on the form.';
+                    } else {
+                        message = "We couldn't start the payment. Please try again.";
                     }
                 } catch (error) {
-                    // Display error message to the user
-                    document.getElementById('errorMessage').textContent = error.message;
-                    document.getElementById('errorMessage').style.display = 'block';
+                    message = "We couldn't start the payment. Please try again.";
                 } finally {
-                    // Re-enable the buttons and hide the spinner
-                    this.disabled = false;
-                    this.style.display = 'block';
-                    document.getElementById('startOverButton').style.display = 'block';
-                    document.getElementById('backButton').style.display = 'block';
-                    document.getElementById('confirmSubmitSpinner').style.display = 'none';
+                    if (!redirecting) {
+                        document.getElementById('errorMessage').textContent = message;
+                        document.getElementById('errorMessage').style.display = 'block';
+                        // The token is single use, so ask for a new check
+                        captchaToken = '';
+                        if (captchaWidgetId !== null) { try { turnstile.reset(captchaWidgetId); } catch (e) {} }
+                        this.style.display = 'block';
+                        document.getElementById('startOverButton').style.display = 'block';
+                        document.getElementById('backButton').style.display = 'block';
+                        document.getElementById('confirmSubmitSpinner').style.display = 'none';
+                        updatePayButton();
+                    }
                 }
             });
             // Function to initialize the page with stored data

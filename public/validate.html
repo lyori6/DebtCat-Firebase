@@ -20,6 +20,7 @@
   <link href="images/webclip.png" rel="apple-touch-icon">
   <script src="/js/consent.js"></script>
   <script src="/js/count.js"></script>
+  <script>try { localStorage.removeItem('submittedData'); } catch (e) {}</script>
 <!--  Google tag (gtag.js) ** MOVED to site settings/integrations"
 -->
   <!--   MS Clarity   -->
@@ -33,8 +34,6 @@
     <head>
       <meta charset="UTF-8">
       <title>Dispute Letter Submission</title>
-      <!--  Include jsPDF from CDN  -->
-      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
       <style>
         /* Custom Spinner Styling */
         .spinner {
@@ -72,346 +71,50 @@
         <div class="spinner"></div>
       </div>
       <script>
-    // Utility function to convert Blob to Base64
-    function blobToBase64(blob) {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-        });
+    var POLL_MS = 3000;
+    var MAX_MS = 60000;
+    function showMessage(message, isError) {
+        var box = document.getElementById('messageBox');
+        if (!box) {
+            box = document.createElement('div');
+            box.id = 'messageBox';
+            box.style.cssText = 'max-width:480px;margin:120px auto 40px;padding:16px;border:1px solid;border-radius:8px;text-align:center;font-size:18px;';
+            document.body.appendChild(box);
+        }
+        box.style.backgroundColor = isError ? '#f8d7da' : '#d4edda';
+        box.style.color = isError ? '#721c24' : '#155724';
+        box.style.borderColor = isError ? '#f5c6cb' : '#c3e6cb';
+        box.textContent = message;
     }
-    // Function to display messages
-    function showMessage(message, isError = true) {
-        const messageBox = document.getElementById('messageBox');
-        messageBox.style.display = 'block';
-        messageBox.style.backgroundColor = isError ? '#f8d7da' : '#d4edda';
-        messageBox.style.color = isError ? '#721c24' : '#155724';
-        messageBox.style.borderColor = isError ? '#f5c6cb' : '#c3e6cb';
-        messageBox.textContent = message;
+    function fail() {
+        window.location.href = '/s/letter-failed';
     }
-    // Function to extract session_id from URL
-    function getSessionIdFromURL() {
-        const params = new URLSearchParams(window.location.search);
-        return params.get('session_id');
+    function done() {
+        try { sessionStorage.removeItem('submittedData'); } catch (e) {}
+        window.location.href = '/ty-mail.html';
     }
-    // Function to validate session_id with the Worker
-    async function validateSessionId(sessionId) {
-        try {
-            const response = await fetch('https://stripe-vali.debtcatai.workers.dev/', { // Replace with your actual Worker URL
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ session_id: sessionId })
-            });
-            const result = await response.json();
-            if (response.ok && result.success) {
-                return true;
-            } else {
-                showMessage(result.error || 'Invalid or already used session ID.');
-                return false;
-            }
-        } catch (error) {
-            console.error('Session Validation Error:', error);
-            showMessage('An error occurred while validating the session. Please try again later.');
-            return false;
+    window.addEventListener('load', function () {
+        var id = new URLSearchParams(window.location.search).get('order');
+        if (!id || !/^[0-9a-fA-F-]{36}$/.test(id)) { fail(); return; }
+        var started = Date.now();
+        function poll() {
+            fetch(window.DC_API + '/api/letters/order?id=' + encodeURIComponent(id))
+                .then(function (r) { return r.ok ? r.json() : { status: 'error' }; })
+                .catch(function () { return { status: 'error' }; })
+                .then(function (data) {
+                    if (data.status === 'mailed') { done(); return; }
+                    if (data.status === 'missing') { fail(); return; }
+                    if (data.status === 'pending' || data.status === 'mailing') {
+                        showMessage("Payment received. We're mailing your letter now.", false);
+                    }
+                    if (Date.now() - started >= MAX_MS) {
+                        showMessage("Your payment went through and your letter is on its way to the mail service. We'll email you when it's sent. You can close this page.", false);
+                        return;
+                    }
+                    setTimeout(poll, POLL_MS);
+                });
         }
-    }
-    // Function to generate PDF using jsPDF
-    async function generatePDF(data) {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const margin = 20;
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const pageHeight = doc.internal.pageSize.getHeight();
-        const maxY = pageHeight - margin;
-        let yPosition = margin;
-        // Utility function to add text with automatic page breaks
-        const addText = (text, options = {}) => {
-            const { fontSize = 12, isBold = false, indent = 0 } = options;
-            doc.setFontSize(fontSize);
-            if (isBold) {
-                doc.setFont('helvetica', 'bold');
-            } else {
-                doc.setFont('helvetica', 'normal');
-            }
-            const textLines = doc.splitTextToSize(text, pageWidth - 2 * margin - indent);
-            textLines.forEach(line => {
-                if (yPosition + 7 > maxY) {
-                    doc.addPage();
-                    yPosition = margin;
-                    doc.setFontSize(12);
-                    yPosition += 10;
-                }
-                doc.text(line, margin + indent, yPosition);
-                yPosition += 7;
-            });
-        };
-        // **1. Date**
-        const currentDate = new Date().toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        addText(`${currentDate}`);
-        yPosition += 3;
-        // **2. Collector's Information**
-        const collectorName = data.collectorName || 'Collector Inc.';
-        let collectorAddressLine = `${data.collectorAddress || ''}`;
-        if (data.collectorAddress2 && data.collectorAddress2.trim() !== "") {
-            collectorAddressLine += `, ${data.collectorAddress2}`;
-        }
-        collectorAddressLine += `, ${data.collectorCity || ''}, ${data.collectorState || ''} ${data.collectorZip || ''}`.trim();
-        addText(`To: ${collectorName}`);
-        addText(`Address: ${collectorAddressLine}`);
-        yPosition += 10;
-        // **3. Sender's Information**
-        const fullName = `${data.firstName || ''} ${data.lastName || ''}`.trim();
-        addText(fullName);
-        const fullAddress = `${data.address || ''}, ${data.city || ''}, ${data.state || ''} ${data.zip || ''}`.trim();
-        addText(fullAddress);
-        addText(`${data.email || ''}`);
-        yPosition += 10;
-        // **4. Account Details**
-        const numericBalance = Number(data.balance);
-        let formattedBalance = "0.00";
-        if (!isNaN(numericBalance)) {
-            formattedBalance = numericBalance.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-        } else {
-            console.error("Invalid balance value:", data.balance);
-        }
-        addText(`Account Number: ${data.accountNumber || ''}`);
-        addText(`Account Balance: $${formattedBalance}`);
-        yPosition += 10;
-        // **5. Subject Line**
-        addText('Subject: Dispute of Debt and Request for Verification', { isBold: true });
-        yPosition += 5;
-        // **6. Greeting**
-        const greeting = collectorName
-            ? `Dear ${collectorName},`
-            : 'Dear To Whom It May Concern,';
-        addText(greeting);
-        yPosition += 5;
-        // **7. Body of the Letter**
-        const bodyParagraph = `I am writing in response to your communication regarding the above-referenced account. I am exercising my rights under the Fair Debt Collection Practices Act to dispute this debt and request verification. I dispute the validity of the debt in question for the following reason(s): ${data.reasonForDispute || ''}.`;
-        addText(bodyParagraph);
-        yPosition += 5;
-        const verificationRequest = `Under the Fair Debt Collection Practices Act (FDCPA), 15 U.S.C. § 1692g(b), I request that you provide verification of this debt. Specifically, please supply the following information:`;
-        addText(verificationRequest);
-        yPosition += 5;
-        const bulletPoints = [
-            '1. The amount of the debt and an itemized accounting of any interest, fees, or other charges that have been added to the original amount.',
-            '2. The name and address of the original creditor.',
-            '3. A copy of any judgment (if applicable).',
-            '4. Proof that you are licensed to collect debts in my state.',
-            '5. Proof of the last payment made on this account.'
-        ];
-        bulletPoints.forEach(point => {
-            addText(point, { indent: 10 });
-            yPosition += 5;
-        });
-        const request30Days = `I request that you provide this information within 30 days of receiving this letter. Until this information is provided, I request that you cease all collection activities related to this debt. If you have reported this debt to any credit reporting agencies, I also demand that you inform them of this dispute in compliance with the Fair Credit Reporting Act, 15 U.S.C. § 1681s-2.`;
-        addText(request30Days);
-        yPosition += 5;
-        const communicationPreference = `Please forward all written responses to both my email address (${data.email}) and my physical address as provided above. Please note that I prefer all future communications regarding this matter to be in writing.`;
-        addText(communicationPreference);
-        yPosition += 5;
-        const privacyRequest = `I do not authorize you to release any of my personal or financial information to any third party.`;
-        addText(privacyRequest);
-        yPosition += 5;
-        const finalStatement = `I am maintaining careful records of all correspondence and communications related to this matter, and I am prepared to report any violations of the FDCPA to the appropriate authorities, including the Federal Trade Commission and the Consumer Financial Protection Bureau.`;
-        addText(finalStatement);
-        yPosition += 5;
-        if (data.disputeNote) {
-            addText(data.disputeNote);
-            yPosition += 5;
-        }
-        // **8. Closing**
-        yPosition += 5;
-        addText('Sincerely,');
-        yPosition += 10;
-        addText(`${fullName}`);
-        yPosition += 10;
-        // **9. Footer**
-        const footerText = 'Powered by DebtCat';
-        const footerFontSize = 10;
-        doc.setFontSize(footerFontSize);
-        doc.setTextColor(150);
-        doc.text(footerText, margin, pageHeight - margin / 2);
-        // **12. Finalize PDF for Email**
-        const pdfBlob = doc.output('blob');
-        const pdfBase64 = await blobToBase64(pdfBlob);
-        return pdfBase64;
-    }
-    // Function to send data to PostGrid worker and handle responses
-    async function sendPostGridRequest(sessionId) {
-        const data = JSON.parse(localStorage.getItem('submittedData'));
-        // Show the spinner overlay
-        document.getElementById('loadingOverlay').style.display = 'flex';
-        // Format the balance with a dollar sign, commas, and decimal points
-        let formattedBalance = "";
-        if (data.balance) {
-            const balanceNumber = parseFloat(data.balance);
-            if (!isNaN(balanceNumber)) {
-                formattedBalance = `$${balanceNumber.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-            }
-        }
-        // Add formatted balance to data for PDF generation
-        data.balanceFormatted = formattedBalance;
-        // Set mailingClass based on the letterType
-        let mailingClassCode = "first_class"; // default mailing class code
-        let mailingClassDisplay = "First-Class Mail"; // for email content
-        if (data.letterType === "certified") {
-            mailingClassCode = "certified";
-            mailingClassDisplay = "Certified Mail";
-        }
-        // Generate PDF
-        let pdfBase64 = "";
-        try {
-            pdfBase64 = await generatePDF(data);
-        } catch (pdfError) {
-            console.error("PDF Generation Error:", pdfError);
-            const errorData = {
-                pdfError: pdfError.message,
-                timestamp: new Date().toISOString(),
-                sessionId: sessionId
-            };
-            localStorage.setItem('errorData', JSON.stringify(errorData));
-            // Redirect to a failure page
-            window.location.href = "/s/letter-failed";
-            return;
-        }
-        const requestData = {
-            session_id: sessionId, // Include session_id
-            from: {
-                firstName: data.firstName || "", 
-                lastName: data.lastName || "", 
-                addressLine1: data.address || "",
-                city: data.city || "",
-                provinceOrState: data.state || "",
-                postalOrZip: data.zip || "",
-                country: "US",
-                email: data.email || "",
-            },
-            to: {
-                companyName: data.collectorName || "Unknown Company", 
-                addressLine1: data.collectorAddress || "",
-                addressLine2: data.collectorAddress2 || "",
-                city: data.collectorCity || "",
-                provinceOrState: data.collectorState || "",
-                postalOrZip: data.collectorZip || "",
-                country: "US",
-            },
-            description: "Dispute Letter",
-            templateId: "template_fBGNa4yxp7Cy9E6Borp9AU", 
-            templateData: {
-                disputeNote: data.disputeNote || "",
-                accountNumber: data.accountNumber || "",
-                reasonForDispute: data.reasonForDispute || "",
-                balance: formattedBalance || "",
-            },
-            paper: "standard",
-            mailingClass: mailingClassCode, // Set mailing class dynamically
-            size: "us_letter",
-            pdf: pdfBase64, // Include the generated PDF
-        };
-        try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
-            const response = await fetch("https://my-postgrid-worker.debtcatai.workers.dev/", { // Replace with your actual Worker URL
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(requestData),
-                signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error(`PostGrid Worker Error: ${response.status} - ${errorText}`);
-                const errorData = {
-                    mailError: `${response.status} - ${errorText}`,
-                    timestamp: new Date().toISOString(),
-                    sessionId: sessionId
-                };
-                localStorage.setItem('errorData', JSON.stringify(errorData));
-                // Hide the spinner
-                document.getElementById('loadingOverlay').style.display = 'none';
-                window.location.href = "/s/letter-failed.html";
-                return;
-            }
-            // Send confirmation email with PDF attachment
-            await sendConfirmationEmail(data, mailingClassDisplay, pdfBase64, sessionId);
-        } catch (error) {
-            console.error('PostGrid Request Error:', error);
-            const errorData = {
-                mailError: error.name === 'AbortError' ? 'Request timed out' : error.message,
-                timestamp: new Date().toISOString(),
-                sessionId: sessionId
-            };
-            localStorage.setItem('errorData', JSON.stringify(errorData));
-            // Hide the spinner
-            document.getElementById('loadingOverlay').style.display = 'none';
-            window.location.href = "/s/letter-failed.html";
-            return;
-        }
-        // Hide the spinner after successful processing
-        document.getElementById('loadingOverlay').style.display = 'none';
-        // Redirect to thank you page after processing
-        window.location.href = "/ty-mail.html";
-    }
-    // Function to send confirmation email with PDF attachment
-    async function sendConfirmationEmail(data, mailingClassDisplay, pdfBase64, sessionId) {
-        const emailData = {
-            session_id: sessionId, // Include session_id to mark it as used
-            email: data.email,
-            pdfData: pdfBase64, // Base64-encoded PDF
-            filename: 'Dispute_Letter.pdf',
-            formData: {
-                firstName: data.firstName,
-                collectorName: data.collectorName,
-                collectorAddress: data.collectorAddress,
-                collectorAddress2: data.collectorAddress2 || '',
-                mailingClass: mailingClassDisplay, // e.g., "Certified Mail" or "First-Class Mail"
-            },
-        };
-        try {
-            const response = await fetch('https://letter-cofirm-w-pdf.debtcatai.workers.dev/', { // **Ensure this URL is correct**
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(emailData)
-            });
-            if (!response.ok) {
-                const errorResponse = await response.json();
-                console.error('Email Worker Error:', response.status, errorResponse.message);
-                // Optionally, you can log the error or notify the user silently
-            }
-        } catch (error) {
-            console.error('Email Sending Error:', error);
-            // Optionally, you can log the error or notify the user silently
-        }
-    }
-    // Initiate the process as soon as the page loads
-    window.addEventListener('load', async () => {
-        const sessionId = getSessionIdFromURL();
-        if (!sessionId) {
-            showMessage('Missing session ID. Unable to process your request.');
-            return;
-        }
-        const isValid = await validateSessionId(sessionId);
-        if (isValid) {
-            // Proceed with sending the letter and email
-            sendPostGridRequest(sessionId);
-        } else {
-            // Optionally, you can hide or disable form elements here
-        }
+        poll();
     });
 </script>
     </body>

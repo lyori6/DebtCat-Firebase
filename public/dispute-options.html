@@ -25,6 +25,7 @@
   <link href="images/webclip.png" rel="apple-touch-icon">
   <script src="/js/consent.js"></script>
   <script src="/js/count.js"></script>
+  <script>try { localStorage.removeItem('submittedData'); } catch (e) {}</script>
 <!--  Google tag (gtag.js) ** MOVED to site settings/integrations"
 -->
   <!--   MS Clarity   -->
@@ -416,14 +417,18 @@ button:active,
           <div id="timeoutMessage" style="display:none; color: red;"></div>
           <div id="rateLimitMessage" style="display:none; color: red;"></div>
           <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+          <script type="module">
+import { letterBlocks } from '/js/letter.js';
+window.letterBlocks = letterBlocks;
+          </script>
           <script>
 // Global variables
 let captchaWidgetId = null;
 let emailPopulated = false;
 let captchaCompleted = false; // New flag to track CAPTCHA completion
 const MAX_CAPTCHA_LOAD_ATTEMPTS = 3;
-const TURNSTILE_SITEKEY = '0x4AAAAAAAiA6_L9K0nk7Zwy';
-const WORKER_URL = 'https://turnstile-worker-d.debtcatai.workers.dev/';
+const TURNSTILE_SITEKEY = ['localhost', '127.0.0.1'].includes(location.hostname) ? '1x00000000000000000000AA' : '0x4AAAAAAAiA6_L9K0nk7Zwy';
+let captchaToken = '';
 // Rate limiter
 const rateLimiter = (() => {
     let requestCount = 0;
@@ -480,13 +485,20 @@ async function loadCaptcha() {
             captchaContainer.innerHTML = '';
             captchaWidgetId = turnstile.render('#captchaContainer', {
                 sitekey: TURNSTILE_SITEKEY,
-                callback: () => {
+                callback: (token) => {
+                    captchaToken = token;
                     captchaCompleted = true; // CAPTCHA completed successfully
                     validateForm();
                 },
-                'error-callback': () => {
+                'expired-callback': () => {
+                    captchaToken = '';
                     captchaCompleted = false;
-                    throw new Error('Turnstile encountered an error');
+                    validateForm();
+                },
+                'error-callback': () => {
+                    captchaToken = '';
+                    captchaCompleted = false;
+                    validateForm();
                 }
             });
             return;
@@ -515,318 +527,127 @@ function validateForm() {
     const isFormValid = isEmailValid && isCheckboxChecked && captchaCompleted; // Include CAPTCHA check
     document.getElementById('submitEmailButton').disabled = !isFormValid;
 }
-// Utility Function to Convert Blob to Base64
-function blobToBase64(blob) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(blob);
-        reader.onloadend = () => {
-            const base64String = reader.result.split(',')[1]; // Remove the data URL prefix
-            resolve(base64String);
-        };
-        reader.onerror = error => reject(error);
-    });
+// Build the letter PDF from the shared template (/js/letter.js)
+function buildLetterPdf(fields) {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'letter' });
+    const margin = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+    const maxWidth = pageWidth - margin * 2;
+    const lineHeight = 6;
+    let y = margin;
+    const ensureRoom = () => {
+        if (y + lineHeight > pageHeight - margin) {
+            doc.addPage();
+            y = margin;
+        }
+    };
+    const blocks = window.letterBlocks(fields, { mailed: false });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(12);
+    doc.setTextColor(0);
+    for (const b of blocks) {
+        if (b.kind === 'blank') {
+            y += lineHeight;
+            continue;
+        }
+        if (b.kind === 'footer') {
+            doc.setFontSize(10);
+            doc.setTextColor(150);
+            doc.text(b.text, margin, y + lineHeight);
+            doc.setFontSize(12);
+            doc.setTextColor(0);
+            continue;
+        }
+        const indent = b.kind === 'item' ? 10 : 0;
+        doc.setFont('helvetica', b.kind === 'subject' ? 'bold' : 'normal');
+        const lines = doc.splitTextToSize(b.text, maxWidth - indent);
+        for (const l of lines) {
+            ensureRoom();
+            doc.text(l, margin + indent, y + lineHeight - 1.5);
+            y += lineHeight;
+        }
+        if (b.kind === 'para' || b.kind === 'item') y += b.kind === 'para' ? 2 : 1;
+    }
+    return doc;
+}
+function readLetterFields() {
+    try {
+        return JSON.parse(sessionStorage.getItem('submittedData')) || {};
+    } catch (e) {
+        return {};
+    }
 }
 // PDF Generation Function for Download
 function generatePdf() {
     const loadingModal = document.getElementById('loadingModal');
     loadingModal.style.display = 'block'; // Show the modal with the spinner
     setTimeout(() => {
-        const { jsPDF } = window.jspdf;
-        const doc = new jsPDF();
-        const formData = JSON.parse(localStorage.getItem('submittedData'));
-        const {
-            firstName,
-            lastName,
-            email,
-            address,
-            city,
-            state,
-            zip,
-            accountNumber,
-            balance,
-            collectorName,
-            reasonForDispute,
-            disputeNote
-        } = formData || {};
-        const fullName = `${firstName || ''} ${lastName || ''}`.trim();
-        if (!fullName) {
-            console.error("Full name is undefined");
+        try {
+            const doc = buildLetterPdf(readLetterFields());
+            doc.save('dispute_letter.pdf');
+            window.location.href = '/ty-pdf.html';
+        } catch (error) {
+            console.error('PDF error:', error.message);
+            alert('We couldn\'t make your PDF. Please try again.');
+        } finally {
+            loadingModal.style.display = 'none';
         }
-        const pageWidth = doc.internal.pageSize.getWidth();
-        const margin = 20; // Increased margin to prevent text from touching the edges
-        const lineHeight = 6; // Adjusted for better readability
-        let yPosition = 20;
-        // **1. Date**
-        yPosition += lineHeight * 2; // Increased spacing at the top
-        const currentDate = new Date().toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-        });
-        doc.text(`${currentDate}`, margin, yPosition);
-        // **2. Sender's Information**
-        yPosition += lineHeight * 1.2;
-        doc.setFontSize(12);
-        doc.text(fullName, margin, yPosition);
-        yPosition += lineHeight;
-        const fullAddress = `${address}, ${city}, ${state} ${zip}`.trim();
-        doc.text(fullAddress, margin, yPosition);
-        yPosition += lineHeight;
-        doc.text(`${email}`, margin, yPosition);
-        // **3. Account Details**
-        yPosition += lineHeight * 1.5;
-        // Format the balance with commas and two decimal places
-        const numericBalance = Number(balance);
-        let formattedBalance = "0.00";
-        if (!isNaN(numericBalance)) {
-            formattedBalance = numericBalance.toLocaleString('en-US', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-        } else {
-            console.error("Invalid balance value:", balance);
-        }
-        // Insert the account number and formatted balance into the PDF
-        doc.text(`Account Number: ${accountNumber}`, margin, yPosition);
-        yPosition += lineHeight;
-        doc.text(`Account Balance: $${formattedBalance}`, margin, yPosition);
-        // **4. Subject Line**
-        yPosition += lineHeight * 1.5;
-        doc.setFont('helvetica', 'bold');
-        doc.text('Subject: Dispute of Debt and Request for Verification', margin, yPosition);
-        doc.setFont('helvetica', 'normal');
-        // **5. Greeting**
-        yPosition += lineHeight;
-        const greeting = collectorName
-            ? `Dear ${collectorName},`
-            : 'Dear To Whom It May Concern,';
-        doc.text(greeting, margin, yPosition);
-        // **6. Body of the Letter**
-        yPosition += lineHeight * 1.5;
-        const firstParagraph = `I am writing in response to your communication regarding the above-referenced account. I am exercising my rights under the Fair Debt Collection Practices Act to dispute this debt and request verification. I dispute the validity of the debt in question for the following reason(s): ${reasonForDispute}.`;
-        const firstParagraphLines = doc.splitTextToSize(firstParagraph, pageWidth - 2 * margin);
-        doc.text(firstParagraphLines, margin, yPosition);
-        yPosition += firstParagraphLines.length * lineHeight;
-        const verificationRequest = `Under the Fair Debt Collection Practices Act (FDCPA), 15 U.S.C. § 1692g(b), I request that you provide verification of this debt. Specifically, please supply the following information:`;
-        const verificationRequestLines = doc.splitTextToSize(verificationRequest, pageWidth - 2 * margin);
-        doc.text(verificationRequestLines, margin, yPosition);
-        yPosition += verificationRequestLines.length * lineHeight;
-        const bulletPoints = [
-            '1. The amount of the debt and an itemized accounting of any interest, fees, or other charges that have been added to the original amount.',
-            '2. The name and address of the original creditor.',
-            '3. A copy of any judgment (if applicable).',
-            '4. Proof that you are licensed to collect debts in my state.',
-            '5. Proof of the last payment made on this account.'
-        ];
-        bulletPoints.forEach(point => {
-            const pointLines = doc.splitTextToSize(point, pageWidth - 2 * margin);
-            doc.text(pointLines, margin + 5, yPosition); // Indent bullet points
-            yPosition += pointLines.length * lineHeight;
-        });
-        const request30Days = `I request that you provide this information within 30 days of receiving this letter. Until this information is provided, I request that you cease all collection activities related to this debt. If you have reported this debt to any credit reporting agencies, I also demand that you inform them of this dispute in compliance with the Fair Credit Reporting Act, 15 U.S.C. § 1681s-2.`;
-        const request30DaysLines = doc.splitTextToSize(request30Days, pageWidth - 2 * margin);
-        doc.text(request30DaysLines, margin, yPosition);
-        yPosition += request30DaysLines.length * lineHeight;
-        const communicationPreference = `Please forward all written responses to both my email address (${email}) and my physical address as provided above. Please note that I prefer all future communications regarding this matter to be in writing.`;
-        const communicationPreferenceLines = doc.splitTextToSize(communicationPreference, pageWidth - 2 * margin);
-        doc.text(communicationPreferenceLines, margin, yPosition);
-        yPosition += communicationPreferenceLines.length * lineHeight;
-        const privacyRequest = `I do not authorize you to release any of my personal or financial information to any third party.`;
-        const privacyRequestLines = doc.splitTextToSize(privacyRequest, pageWidth - 2 * margin);
-        doc.text(privacyRequestLines, margin, yPosition);
-        yPosition += privacyRequestLines.length * lineHeight;
-        const finalStatement = `I am maintaining careful records of all correspondence and communications related to this matter, and I am prepared to report any violations of the FDCPA to the appropriate authorities, including the Federal Trade Commission and the Consumer Financial Protection Bureau.`;
-        const finalStatementLines = doc.splitTextToSize(finalStatement, pageWidth - 2 * margin);
-        doc.text(finalStatementLines, margin, yPosition);
-        yPosition += finalStatementLines.length * lineHeight;
-        if (disputeNote) {
-            const disputeNoteLines = doc.splitTextToSize(disputeNote, pageWidth - 2 * margin);
-            doc.text(disputeNoteLines, margin, yPosition);
-            yPosition += disputeNoteLines.length * lineHeight;
-        }
-        // **7. Closing**
-        yPosition += lineHeight * 1.5;
-        doc.text('Sincerely,', margin, yPosition);
-        yPosition += lineHeight * 1.5;
-        doc.text(`${fullName}`, margin, yPosition);
-        // **8. Footer**
-        doc.setFontSize(10); // Increased font size
-        doc.setTextColor(150);
-        doc.text('Powered by DebtCat', margin, doc.internal.pageSize.getHeight() - 10);
-        // **9. Finalize PDF**
-        loadingModal.style.display = 'none';  
-        doc.save('dispute_letter.pdf');
-        window.location.href = '/ty-pdf.html';
-    }, 3000); 
+    }, 3000);
 }
-// PDF Generation Function for Email (Returns Blob)
-async function generatePdfForEmail() {
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    const formData = JSON.parse(localStorage.getItem('submittedData'));
-    const {
-        firstName,
-        lastName,
-        email,
-        address,
-        city,
-        state,
-        zip,
-        accountNumber,
-        balance,
-        collectorName,
-        reasonForDispute,
-        disputeNote
-    } = formData || {};
-    const fullName = `${firstName || ''} ${lastName || ''}`.trim();
-    if (!fullName) {
-        console.error("Full name is undefined");
-    }
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const margin = 20; // Increased margin to prevent text from touching the edges
-    const lineHeight = 6; // Adjusted for better readability
-    let yPosition = 20;
-    // **1. Date**
-    yPosition += lineHeight * 2; // Increased spacing at the top
-    const currentDate = new Date().toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-    });
-    doc.text(`${currentDate}`, margin, yPosition);
-    // **2. Sender's Information**
-    yPosition += lineHeight * 1.2;
-    doc.setFontSize(12);
-    doc.text(fullName, margin, yPosition);
-    yPosition += lineHeight;
-    const fullAddress = `${address}, ${city}, ${state} ${zip}`.trim();
-    doc.text(fullAddress, margin, yPosition);
-    yPosition += lineHeight;
-    doc.text(`${email}`, margin, yPosition);
-    // **3. Account Details**
-    yPosition += lineHeight * 1.5;
-    // Format the balance with commas and two decimal places
-    const numericBalance = Number(balance);
-    let formattedBalance = "0.00";
-    if (!isNaN(numericBalance)) {
-        formattedBalance = numericBalance.toLocaleString('en-US', {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2
-        });
-    } else {
-        console.error("Invalid balance value:", balance);
-    }
-    // Insert the account number and formatted balance into the PDF
-    doc.text(`Account Number: ${accountNumber}`, margin, yPosition);
-    yPosition += lineHeight;
-    doc.text(`Account Balance: $${formattedBalance}`, margin, yPosition);
-    // **4. Subject Line**
-    yPosition += lineHeight * 1.5;
-    doc.setFont('helvetica', 'bold');
-    doc.text('Subject: Dispute of Debt and Request for Verification', margin, yPosition);
-    doc.setFont('helvetica', 'normal');
-    // **5. Greeting**
-    yPosition += lineHeight;
-    const greeting = collectorName
-        ? `Dear ${collectorName},`
-        : 'Dear To Whom It May Concern,';
-    doc.text(greeting, margin, yPosition);
-    // **6. Body of the Letter**
-    yPosition += lineHeight * 1.5;
-    const firstParagraph = `I am writing in response to your communication regarding the above-referenced account. I am exercising my rights under the Fair Debt Collection Practices Act to dispute this debt and request verification. I dispute the validity of the debt in question for the following reason(s): ${reasonForDispute}.`;
-    const firstParagraphLines = doc.splitTextToSize(firstParagraph, pageWidth - 2 * margin);
-    doc.text(firstParagraphLines, margin, yPosition);
-    yPosition += firstParagraphLines.length * lineHeight;
-    const verificationRequest = `Under the Fair Debt Collection Practices Act (FDCPA), 15 U.S.C. § 1692g(b), I request that you provide verification of this debt. Specifically, please supply the following information:`;
-    const verificationRequestLines = doc.splitTextToSize(verificationRequest, pageWidth - 2 * margin);
-    doc.text(verificationRequestLines, margin, yPosition);
-    yPosition += verificationRequestLines.length * lineHeight;
-    const bulletPoints = [
-        '1. The amount of the debt and an itemized accounting of any interest, fees, or other charges that have been added to the original amount.',
-        '2. The name and address of the original creditor.',
-        '3. A copy of any judgment (if applicable).',
-        '4. Proof that you are licensed to collect debts in my state.',
-        '5. Proof of the last payment made on this account.'
-    ];
-    bulletPoints.forEach(point => {
-        const pointLines = doc.splitTextToSize(point, pageWidth - 2 * margin);
-        doc.text(pointLines, margin + 5, yPosition); // Indent bullet points
-        yPosition += pointLines.length * lineHeight;
-    });
-    const request30Days = `I request that you provide this information within 30 days of receiving this letter. Until this information is provided, I request that you cease all collection activities related to this debt. If you have reported this debt to any credit reporting agencies, I also demand that you inform them of this dispute in compliance with the Fair Credit Reporting Act, 15 U.S.C. § 1681s-2.`;
-    const request30DaysLines = doc.splitTextToSize(request30Days, pageWidth - 2 * margin);
-    doc.text(request30DaysLines, margin, yPosition);
-    yPosition += request30DaysLines.length * lineHeight;
-    const communicationPreference = `Please forward all written responses to both my email address (${email}) and my physical address as provided above. Please note that I prefer all future communications regarding this matter to be in writing.`;
-    const communicationPreferenceLines = doc.splitTextToSize(communicationPreference, pageWidth - 2 * margin);
-    doc.text(communicationPreferenceLines, margin, yPosition);
-    yPosition += communicationPreferenceLines.length * lineHeight;
-    const privacyRequest = `I do not authorize you to release any of my personal or financial information to any third party.`;
-    const privacyRequestLines = doc.splitTextToSize(privacyRequest, pageWidth - 2 * margin);
-    doc.text(privacyRequestLines, margin, yPosition);
-    yPosition += privacyRequestLines.length * lineHeight;
-    const finalStatement = `I am maintaining careful records of all correspondence and communications related to this matter, and I am prepared to report any violations of the FDCPA to the appropriate authorities, including the Federal Trade Commission and the Consumer Financial Protection Bureau.`;
-    const finalStatementLines = doc.splitTextToSize(finalStatement, pageWidth - 2 * margin);
-    doc.text(finalStatementLines, margin, yPosition);
-    yPosition += finalStatementLines.length * lineHeight;
-    if (disputeNote) {
-        const disputeNoteLines = doc.splitTextToSize(disputeNote, pageWidth - 2 * margin);
-        doc.text(disputeNoteLines, margin, yPosition);
-        yPosition += disputeNoteLines.length * lineHeight;
-    }
-    // **7. Closing**
-    yPosition += lineHeight * 1.5;
-    doc.text('Sincerely,', margin, yPosition);
-    yPosition += lineHeight * 1.5;
-    doc.text(`${fullName}`, margin, yPosition);
-    // **8. Footer**
-    doc.setFontSize(10); // Increased font size
-    doc.setTextColor(150);
-    doc.text('Powered by DebtCat', margin, doc.internal.pageSize.getHeight() - 10);
-    // **9. Finalize PDF for Email**
-    const pdfBlob = doc.output('blob');
-    return pdfBlob;
+// Email the letter through the Worker
+function showEmailError(message) {
+    const box = document.getElementById('timeoutMessage');
+    box.textContent = message;
+    box.style.display = 'block';
 }
-// Modified Send Email Function
 async function sendEmail() {
     if (!rateLimiter()) return;
     const submitButton = document.getElementById('submitEmailButton');
     const loadingIndicator = document.getElementById('loadingIndicator');
+    document.getElementById('timeoutMessage').style.display = 'none';
     submitButton.style.display = 'none';
     loadingIndicator.style.display = 'block';
+    let message = '';
     try {
-        const email = document.getElementById('emailAddress').value.trim();
-        const formData = JSON.parse(localStorage.getItem('submittedData'));
-        // Generate PDF Blob
-        const pdfBlob = await generatePdfForEmail();
-        // Convert PDF Blob to Base64
-        const base64Pdf = await blobToBase64(pdfBlob);
-        // Prepare Payload
-        const payload = {
-            email: email,
-            pdfData: base64Pdf,
-            filename: 'dispute_letter.pdf',
-            formData: formData
-        };
-        // Send to Cloudflare Worker
-        const response = await fetch('https://sendgrid-pdf-v1.debtcatai.workers.dev/', {
+        const fields = readLetterFields();
+        fields.email = document.getElementById('emailAddress').value.trim();
+        const response = await fetch(`${window.DC_API}/api/letters/email`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({ fields, turnstileToken: captchaToken })
         });
-        const data = await response.json();
-        if (!data.success) {
-            throw new Error(data.message || 'Email sending failed.');
+        let data = {};
+        try { data = await response.json(); } catch (e) {}
+        if (response.ok && data.ok) {
+            window.location.href = '/ty-email-myself.html';
+            return;
         }
-        window.location.href = "/ty-email-myself.html";
+        if (response.status === 403) {
+            message = "The security check didn't go through. Please try again.";
+        } else if (response.status === 429) {
+            message = data.error === 'daily_limit'
+                ? "You've reached today's limit for letters. Please try again tomorrow."
+                : 'Too many tries in a short time. Please wait a minute.';
+        } else if (response.status === 400) {
+            message = 'Please check your details on the form.';
+        } else {
+            message = "We couldn't send the email. Please try again.";
+        }
     } catch (error) {
-        console.error('Error sending email:', error);
-        alert(error.message || 'An error occurred while sending the email.');
-        submitButton.style.display = 'block';
-    } finally {
-        loadingIndicator.style.display = 'none';
+        message = "We couldn't send the email. Please try again.";
     }
+    // Failed: show the message and reset the security check
+    showEmailError(message);
+    captchaToken = '';
+    captchaCompleted = false;
+    if (captchaWidgetId !== null && typeof turnstile !== 'undefined') {
+        try { turnstile.reset(captchaWidgetId); } catch (e) {}
+    }
+    loadingIndicator.style.display = 'none';
+    submitButton.style.display = 'block';
+    validateForm();
 }
 // Event listener for "Download PDF" button
 document.getElementById('downloadDisputeButton').addEventListener('click', function() {
@@ -841,7 +662,6 @@ function loadTurnstileScript() {
         script.defer = true;
         script.id = 'turnstileScript';
         script.onload = () => {
-            console.log('Turnstile script loaded.');
             loadCaptcha();
         };
         script.onerror = () => {
@@ -850,7 +670,6 @@ function loadTurnstileScript() {
         };
         document.body.appendChild(script);
     } else {
-        console.log('Turnstile script already loaded.');
         loadCaptcha();
     }
 }
@@ -865,13 +684,13 @@ document.addEventListener('DOMContentLoaded', () => {
             this.classList.add('email-card-expanded');
             if (!emailPopulated && emailField.value === '') {
                 try {
-                    const formData = JSON.parse(localStorage.getItem('submittedData'));
+                    const formData = JSON.parse(sessionStorage.getItem('submittedData'));
                     if (formData && formData.email) {
                         emailField.value = formData.email;
                         emailPopulated = true;
                     }
                 } catch (error) {
-                    console.error("Error parsing JSON from localStorage:", error);
+                    console.error("Could not read saved details.");
                     alert("There was an error processing your data. Please try again.");
                     return;
                 }
@@ -887,11 +706,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     function updateSubmittedData(letterType) {
         try {
-            let submittedData = JSON.parse(localStorage.getItem('submittedData')) || {};
+            let submittedData = JSON.parse(sessionStorage.getItem('submittedData')) || {};
             submittedData.letterType = letterType;
-            localStorage.setItem('submittedData', JSON.stringify(submittedData));
+            sessionStorage.setItem('submittedData', JSON.stringify(submittedData));
         } catch (error) {
-            console.error("Error updating submittedData:", error);
+            console.error("Could not save mail option.");
         }
     }
     document.getElementById('firstClassMailButton').addEventListener('click', function() {
