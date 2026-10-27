@@ -24,6 +24,7 @@
   <link href="images/webclip.png" rel="apple-touch-icon">
   <script src="/js/consent.js"></script>
   <script src="/js/count.js"></script>
+  <script>try { localStorage.removeItem('submittedData'); } catch (e) {}</script>
 <!--  Google tag (gtag.js) ** MOVED to site settings/integrations"
 -->
   <!--   MS Clarity   -->
@@ -466,7 +467,8 @@ select:focus {
       const submitButton = document.getElementById('submitButton');
       const optInCheckbox = document.getElementById('optInEmail');
       // Prepopulate form fields from submittedData if available
-      const submittedData = JSON.parse(localStorage.getItem('submittedData')) || {};
+      let submittedData = {};
+      try { submittedData = JSON.parse(sessionStorage.getItem('submittedData')) || {}; } catch (e) {}
       if (submittedData.collectorName) {
         document.getElementById('collectorName').value = submittedData.collectorName;
       }
@@ -544,8 +546,8 @@ select:focus {
           collectorZip: collectorData.collectorZip,
           optInEmail: collectorData.optInEmail
         };
-        // Save to localStorage
-        localStorage.setItem('submittedData', JSON.stringify(updatedSubmittedData));
+        // Save for this tab (sessionStorage)
+        try { sessionStorage.setItem('submittedData', JSON.stringify(updatedSubmittedData)); } catch (e) {}
         // Redirect to mail review page
         window.location.href = '/mail-review.html';
       });
