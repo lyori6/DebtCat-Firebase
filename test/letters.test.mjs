@@ -110,7 +110,7 @@ test('checkout prices on the server and the webhook mails once', async () => {
   const { url, order } = await res.json();
   assert.equal(url, 'https://checkout.stripe.com/c/pay/cs_1');
   const stripeBody = decodeURIComponent(calls.find(c => c.url.includes('stripe')).init.body.toString());
-  assert.match(stripeBody, /unit_amount\]=999/);
+  assert.match(stripeBody, /unit_amount\]=1099/);
   assert.match(stripeBody, new RegExp(`success_url=https://debtcat.com/validate.html\\?order=${order}`));
 
   const event = JSON.stringify({ type: 'checkout.session.completed', data: { object: { payment_status: 'paid', client_reference_id: order } } });

@@ -16,7 +16,7 @@ import { siteOrigin } from './lib/origins.js';
 // Prices in cents, set here so the page can't change them.
 export const PRODUCTS = {
   first_class: { cents: 399, name: 'Dispute letter by first class mail' },
-  certified: { cents: 999, name: 'Dispute letter by certified mail' }
+  certified: { cents: 1099, name: 'Dispute letter by certified mail' }
 };
 
 // Throttle (D10): letters per day from one IP and to one email, emailed and mailed together.
